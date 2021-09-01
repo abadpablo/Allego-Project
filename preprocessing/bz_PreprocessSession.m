@@ -76,7 +76,24 @@ disp('Check xml...');
 
 actualPath = pwd;
 prevPath = strsplit(actualPath,filesep);
-prevPath = strcat(prevPath(1),'\',prevPath(2),'\',prevPath(3));
+length_prevPath = length(prevPath);
+
+for i=1:length_prevPath-1
+    prevPath_aux(i) = strcat(prevPath(i));
+end
+
+if length(prevPath_aux) == 1
+    prevPath = strcat(prevPath(1));
+elseif length(prevPath_aux) == 2
+    prevPath = strcat(prevPath(1),'\',prevPath(2));
+elseif length(prevPath_aux) == 3
+    prevPath = strcat(prevPath(1),'\',prevPath(2),'\',prevPath(3));
+elseif length(prevPath_aux) == 4
+    prevPath = strcat(prevPath(1),'\',prevPath(2),'\',prevPath(3),'\',prevPath(4));
+elseif length(prevPath_aux) == 5
+    prevPath = strcat(prevPath(1),'\',prevPath(2),'\',prevPath(3),'\',prevPath(4),'\',prevPath(5));
+end
+
 prevPath = prevPath{1};
 cd(prevPath);
 
