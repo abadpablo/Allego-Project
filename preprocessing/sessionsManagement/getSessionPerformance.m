@@ -111,21 +111,21 @@ for ii=1:length(MergePoints.foldernames)
             end
             cd (basepath)
             
-%         elseif strcmpi(tracking.apparatus{count1}.name,'Open Field')
-%             count = count+1;
-%             cd(tracking.folders{count1})
-%             digitalIn = bz_getDigitalIn('all');
-%             tracking_subfolder = getSessionTracking();
-%             try
-%                 fprintf('Computing Open Field Performance in %s folder \n', tracking.folders{count1});
-%                 tempPerformance{count} = performanceOpenField('digitalIn', digitalIn, 'tracking', tracking_subfolder);
-%                 performanceFolder(count) = ii;
-%                 
-%                 
-%             catch
-%                 
-%                 
-%             end
+        elseif strcmpi(tracking.apparatus{count1}.name,'Open Field')
+            count = count+1;
+            cd(tracking.folders{count1})
+            digitalIn = bz_getDigitalIn('all');
+            tracking_subfolder = getSessionTracking();
+            try
+                fprintf('Computing Open Field Performance in %s folder \n', tracking.folders{count1});
+                tempPerformance{count} = performanceOpenField('digitalIn', digitalIn, 'tracking', tracking_subfolder);
+                performanceFolder(count) = ii;
+                
+                
+            catch
+                
+                
+            end
             
 
         end

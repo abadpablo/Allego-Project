@@ -131,6 +131,7 @@ end
 for i = 1:size(variables,2),
 	subscript{i} = variables(:,i);
 end
+
 linearIndex = sub2ind(outputSize,subscript{:});
 
 tmp = sparse(linearIndex,1,values,prod(outputSize),1);

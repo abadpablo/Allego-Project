@@ -101,9 +101,9 @@ bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'diffLFPs',true,'a
 
 
 %%
-bpath = 'F:\data\HPS23\HPS23_010621_sess12';
+bpath = 'G:\HPS23\HPS23_040621_sess1';
 bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[]);
-bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'diffLFPs',true,'analyzeSubSessions',false,'exclude',{'spikes','ripples','thetaModulation'});
+bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'diffLFPs',true,'analyzeSubSessions',false,'exclude',{'spikes','ripples','thetaModulation','performance','spikeTrain','excel'});
 
 
 bpath = 'F:\data\HPS23\HPS23_300421_sess4';
