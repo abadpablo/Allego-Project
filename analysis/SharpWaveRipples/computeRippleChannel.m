@@ -221,7 +221,7 @@ if ~isempty(timestamps_subSession)
     lfp_aux = bz_GetLFP('all');
     ripples.peaks = ripples.peaks(ripples.peaks*LfpSamplingrate>Win+1 & ripples.peaks*LfpSamplingrate<length(lfp_aux.timestamps)-Win+1);
 else
-    ripples.peaks = ripples.peaks(ripples.peaks*LfpSamplingrate>Win+1 & ripples.peaks*LfpSamplingrate<length(lfp_aux.timestamps)-Win+1);
+    ripples.peaks = ripples.peaks(ripples.peaks*LfpSamplingrate>Win+1 & ripples.peaks*LfpSamplingrate<length(lfp.timestamps)-Win+1);
 end
 
 %% Calculate Ripple power ##################################################

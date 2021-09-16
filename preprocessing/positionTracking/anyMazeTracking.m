@@ -310,14 +310,14 @@ end
 
 
 %% CONVERTING POSITION VARIABLES INTO CM
-% xPos = xPos*100/pixels_metre;
-% yPos = yPos*100/pixels_metre;
-% 
-% head_xPos = head_xPos*100/pixels_metre;
-% head_yPos = head_yPos*100/pixels_metre;
-% 
-% tail_xPos = tail_xPos*100/pixels_metre;
-% tail_yPos = tail_yPos*100/pixels_metre;
+xPos = xPos*100/pixels_metre;
+yPos = yPos*100/pixels_metre;
+
+head_xPos = head_xPos*100/pixels_metre;
+head_yPos = head_yPos*100/pixels_metre;
+
+tail_xPos = tail_xPos*100/pixels_metre;
+tail_yPos = tail_yPos*100/pixels_metre;
 
 %% Figure no filtered tracking data
 % Body tracking

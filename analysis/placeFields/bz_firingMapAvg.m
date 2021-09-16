@@ -60,7 +60,7 @@ addParameter(p,'CellInspector',false,@islogical);
 addParameter(p,'mode','discard',@isstr);
 addParameter(p,'maxDistance',5,@isnumeric);
 addParameter(p,'orderKalmanVel',2,@isnumeric);
-addParameter(p,'speedFilter',true,@islogical);
+addParameter(p,'speedFilter',false,@islogical);
 addParameter(p,'cmBin',2.5,@isnumeric);
 addParameter(p,'periodicAnalysis',false,@islogical);
 addParameter(p,'numRand',10,@isnumeric);
@@ -181,6 +181,7 @@ for iCond = 1:size(positions,2)
     basepath = sessionInfo.session.path;
     save([basepath filesep sessionInfo.FileName '.Tracking.Behavior.mat'],'tracking');
     
+  
     
     
     % Compute timestamps where speed is under threshold
@@ -189,6 +190,7 @@ for iCond = 1:size(positions,2)
     end
 
 end
+
 
 
 % get firign rate maps & map stats

@@ -36,9 +36,10 @@ addParameter(p,'getWaveformsFromDat',false,@islogical);
 addParameter(p,'analogChannelsList','all',@isnumeric);
 addParameter(p,'digitalChannelsList','all',@isnumeric);
 addParameter(p,'analyzeSubSessions',false,@islogical);
-addParameter(p,'showWaveforms',false,@islogical);
+addParameter(p,'showWaveforms',true,@islogical);
 addParameter(p,'forceReloadRipples',false,@islogical);
 addParameter(p,'diffLFPs',false,@islogical);
+addParameter(p,'cellClassification',false,@islogical);
 
 parse(p,varargin{:});
 
@@ -57,7 +58,7 @@ prevPath = pwd;
 cd(basepath);
 
 if ischar(listOfAnalysis) && strcmpi(listOfAnalysis,'all')
-    listOfAnalysis = {'spikes','digitalPulses','ripples','tMazeBehaviour','linearMazeBehaviour','YMazeBehaviour','OpenFieldBehaviour','thetaModulation','behaviour','spikeTrain','performance','excel'};
+    listOfAnalysis = {'spikes','digitalPulses','ripples','tMazeBehaviour','linearMazeBehaviour','YMazeBehaviour','OpenFieldBehaviour','thetaModulation','behaviour','spikeTrain','performance','excel','CellExplorer'};
 end
 
 if ~isempty(exclude)
@@ -72,6 +73,7 @@ for ii=1:length(excludeShanks)
 end
 
 mkdir('SummaryFigures'); % create folder
+mkdir('PhaseModulationFig')
 close all
 
 %% 1 - Spikes Summary
@@ -80,7 +82,7 @@ if any(ismember(listOfAnalysis,'spikes'))
     try
           
         disp('Spike-waveform, ACG and cluster location...');
-        spikes = loadSpikes('getWaveformsFromDat',getWaveformsFromDat,'forceReload',true,'showWaveforms',showWaveforms);
+        spikes = loadSpikes('getWaveformsFromDat',getWaveformsFromDat,'forceReload',false,'showWaveforms',showWaveforms);
 
         % plot spikes summary
         disp('Plotting spikes summary...');
@@ -267,7 +269,7 @@ if any(ismember(listOfAnalysis,'ripples'))
                 disp('Ripples CSD and PSTH for whole Session ...')
                 
                 rippleChannels = computeRippleChannel('discardShanks',excludeShanks);
-                ripples = bz_FindRipples(basepath,rippleChannels.Ripple_Channel,'saveMat',true,'show','on');
+                ripples = bz_FindRipples(basepath,rippleChannels.Ripple_Channel,'saveMat',true,'show','');
 
                 shanks = sessionInfo.AnatGrps;
                 shanks(excludeShanks) = [];
@@ -278,8 +280,7 @@ if any(ismember(listOfAnalysis,'ripples'))
                 ripples.maps = maps;
                 ripples.data = data;
                 ripples.stats = stats;
-                save(fullfile(basepath, [basename '.ripples.events.mat']),'ripples')
-
+                save(fullfile(basepath, [sessionInfo.session.name '.ripples.events.mat']),'ripples')
                 % CSD
                 twin = 0.1;
                 evs = ripples.peaks;
@@ -643,6 +644,7 @@ if any(ismember(listOfAnalysis,'thetaModulation'))
                     save([sessionInfo.session.name '.PhaseLockingData.diffLFPs.cellinfo.mat'],'PhaseLockingData');
                 end
                 disp('Theta modulation...')
+                figure,
                 set(gcf,'Position',[100 -100 2500 1200]);
                 for jj = 1:size(spikes.UID,2)
                     subplot(7,ceil(size(spikes.UID,2)/7),jj); % autocorrelogram
@@ -780,8 +782,7 @@ if any(ismember(listOfAnalysis,'behaviour'))
         
         % PLACE CELLS SUMMARY
         spikes = loadSpikes('getWaveformsFromDat',getWaveformsFromDat,'forceReload',false,'showWaveforms',showWaveforms);
-        firingMaps = bz_firingMapAvg(behaviour,spikes,'saveMat',true,'speedFilter',true,'periodicAnalysis',false);
-        
+        firingMaps = bz_firingMapAvg(behaviour,spikes,'saveMat',true,'speedFilter',true,'periodicAnalysis',false);       
     catch
         warning('It has not been possible to run Behaviour code...')
     end
@@ -807,7 +808,7 @@ if any(ismember(listOfAnalysis,'spikeTrain'))
     try
         disp('Computing Spike Train Analysis...')
         spikes = loadSpikes('getWaveformsFromDat',getWaveformsFromDat,'forceReload',false,'showWaveforms',showWaveforms);
-        spikeTrain = bz_SpikeTrain(spikes,'analyzeSubSessions',true);
+        spikeTrain = bz_SpikeTrain(spikes,'analyzeSubSessions',analyzeSubSessions,'showFigure',true);
     catch
         warning('It has not been possible to run Spike Train Analysis...')
     end
@@ -838,10 +839,30 @@ if any(ismember(listOfAnalysis,'excel'))
     
 end
 
+%% 8 - CELL EXPLORER
+
+if any(ismember(listOfAnalysis,'CellExplorer'))
+    
+    try
+        disp('Running CellExplorer code...');
+        session = sessionTemplate(basepath,'showGUI',false);        
+        validateSessionStruct(session);        
+        cell_metrics = ProcessCellMetrics('session', session,'showGUI',true);
+        cell_metrics = CellExplorer('metrics',cell_metrics); 
+    catch
+        disp('It is not possible to run CellExplorer code...')
+    end
+    
+end
 
 
-
-
-
+%% 9 - PLOT PLACE FIELDS
+try
+    
+    plot_placeFields(firingMaps,spikes,tracking);
+catch
+    
+    disp('It is not possible to run plot Place Fields')
+end
 
 

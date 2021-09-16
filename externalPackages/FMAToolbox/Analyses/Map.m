@@ -212,7 +212,7 @@ else
 end
 
 % Computations
-if isempty(y),
+if isempty(y)
 	% 1D (only x)
 	map.x = linspace(0,1,nBinsX);
 	map.count = Accumulate(x,n,nBinsX);
@@ -233,6 +233,9 @@ else
 	map.y = linspace(0,1,nBinsY);
 	map.count = Accumulate([x y],n,nBins);
 	map.time = Accumulate([x y],dt,nBins);
+    map.count = rot90(map.count);
+    map.time = rot90(map.time);
+    
 	valid = map.time > minTime;
     count = map.count; %unsmooth
     time = map.time; % unsmooth
