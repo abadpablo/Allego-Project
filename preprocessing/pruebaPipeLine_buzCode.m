@@ -9,14 +9,18 @@
 
 % changeFilesName('\\DESKTOP-IORIG9S\data\HPS22\HPS22_130521');
 
-changeFilesName_notTrackingAllFiles('\\DESKTOP-IORIG9S\Subiculum\HPS22\HPS22_160621');
+changeFilesName_notTrackingAllFiles('C:\data\HPR21409');
 
 %%
 updateExpFolder('\\DISCOVERY_ONE\Sub\HPS23','F:\data\HPS23');
-arrangeSessionFolder('F:\data\HPS23');
-bpath= 'F:\data\HPS23';
+arrangeSessionFolder('C:\data\HPR21409');
+bpath= 'C:\data\HPR21409';
 createFiles('basepath',bpath);
+
 bpath = 'G:\HPS23\HPS23_040621_sess1';
+bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[],'medianSubstr',false,'runSummary',true);
+
+bpath = 'H:\data\Project_GLUN3\HPS24\HPS24_290621_sess4';
 bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[],'medianSubstr',false,'runSummary',true);
 
 %%
@@ -118,7 +122,25 @@ bpath = 'F:\data\HPS23\HPS23_030621_sess14';
 bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[]);
 
 
+<<<<<<< HEAD
 %% HPS23 090621 Prueba para SubSessions
 bpath = 'G:\HPS23\HPS23_090621_sess9';
 bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'diffLFPS',true,'analyzeSubSessions',true,'exclude',{'spikes','ripples'});
+=======
+%%
+
+changeFilesName_notTrackingAllFiles('H:\data\HPS25\HPS25_050721');
+changeFilesName_notTrackingAllFiles('H:\data\HPS25\HPS25_280621');
+arrangeSessionFolder('H:\data\HPS25');
+updateExpFolder('\\DISCOVERY_ONE\Sub\HPS23','F:\data\HPS23');
+
+bpath= 'H:\data\HPS25';
+createFiles('basepath',bpath);
+%%
+bpath = 'H:\data\HPS25\HPS25_050721_sess1';
+bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[]);
+
+
+%% Social Interaction
+>>>>>>> fcd6863a01f62244c8077de128727d7deef5e3e3
 
