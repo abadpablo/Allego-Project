@@ -143,7 +143,7 @@ if any(ismember(listOfAnalysis,'spikes'))
         disp('Plotting CCG...');
         figure;
         set(gcf,'Position',[100 -100 2500 1200])
-        [allCcg, t] = CCG_CellExplorer(spikes.times,[],'binSize',0.005,'duration',0.6);
+        [allCcg, t] = CCG(spikes.times,[],'binSize',0.005,'duration',0.6);
         indCell = [1:size(allCcg,2)];
         for jj = 1:size(spikes.UID,2)
             fprintf(' **CCG from unit %3.i/ %3.i \n',jj, size(spikes.UID,2)); %\n
@@ -817,7 +817,7 @@ if any(ismember(listOfAnalysis,'behaviour'))
         
         % PLACE CELLS SUMMARY
         spikes = loadSpikes('getWaveformsFromDat',getWaveformsFromDat,'forceReload',false,'showWaveforms',showWaveforms);
-        firingMaps = bz_firingMapAvg(behaviour,spikes,'saveMat',true,'speedFilter',true,'periodicAnalysis',false);       
+        firingMaps = bz_firingMapAvg(behaviour,spikes,'saveMat',true,'speedFilter',true,'periodicAnalysis',false,'spikeShuffling',false);       
     catch
         warning('It has not been possible to run Behaviour code...')
     end
@@ -1062,7 +1062,8 @@ end
 %% 10 - PLOT PLACE FIELDS
 try
     disp('Plotting Place Fields')
-    plot_placeFields(firingMaps,spikes,tracking,cell_metrics);
+%     plot_placeFields(firingMaps,spikes,tracking,cell_metrics);
+    plot_placeFields(firingMaps,spikes,tracking);
 catch
     disp('It is not possible to run plot Place Fields')
 end

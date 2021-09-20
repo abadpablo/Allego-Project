@@ -64,6 +64,7 @@ addParameter(p,'speedFilter',false,@islogical);
 addParameter(p,'cmBin',2.5,@isnumeric);
 addParameter(p,'periodicAnalysis',false,@islogical);
 addParameter(p,'numRand',10,@isnumeric);
+addParameter(p,'spikeShuffling',true,@islogical);
 
 parse(p,varargin{:});
 smooth = p.Results.smooth;
@@ -81,6 +82,7 @@ cmBin = p.Results.cmBin;
 periodicAnalysis = p.Results.periodicAnalysis;
 numRand = p.Results.numRand;
 basepath = p.Results.basepath;
+spikeShuffling = p.Results.spikeShuffling;
 
 %% In case firingMapsAvg already exists
 if ~isempty(dir([basepath filesep '*firingMapsAvg.cellinfo.mat']))
@@ -110,11 +112,11 @@ if isfield(tracking,'apparatus')
 end
 
 if numApparatus == 1
-    nBins = round(xLim/cmBin);
+    nBins{1} = round(xLim/cmBin);
 else
     clear nBins
     for i = 1:numApparatus
-        numberBins{i} = round(xLim{i}/cmBin);
+        nBins{i} = round(xLim{i}/cmBin);
     end
 end
 
@@ -129,12 +131,16 @@ end
      conditions = 1;
   end
   %%% TODO: conditions label
-  if conditions == 3
-      nBins(1) = numberBins{1};
-      nBins(2) = numberBins{1};
-      nBins(3) = numberBins{2};
-  end
+%   if conditions == 3
+%       nBins(1) = numberBins{1};
+%       nBins(2) = numberBins{1};
+%       nBins(3) = numberBins{2};
+%   end
   
+
+for i=1:length(positions)   
+    positions{i} = positions{i}(tracking.events.subSessionsMask == i,:);  
+end
 %% Calculate
 % Erase positions below speed threshold
 for iCond = 1:size(positions,2)
@@ -152,8 +158,7 @@ for iCond = 1:size(positions,2)
         warning('This is not a linear nor a 2D space!');
     end
     % Absolute speed
-    v = sqrt(vx.^2+vy.^2);
-    
+    v = sqrt(vx.^2+vy.^2);    
     if length(v) < length(posx)
         dif = length(posx) - length(v);
         s = v;
@@ -169,48 +174,42 @@ for iCond = 1:size(positions,2)
         
         v = [nan(dif,1); s];
         vx = [nan(dif,1); sx];
-        vy = [nan(dif,1); sy];
-        
+        vy = [nan(dif,1); sy];        
     end
-        
-    
     tracking.speed.v = v/100; % cm/s
     tracking.speed.vx = vx/100; % cm/s
     tracking.speed.vy = vy/100; % cm/s
     [sessionInfo] = bz_getSessionInfo(pwd, 'noPrompts', true); sessionInfo.rates.lfp = 1250;  
     basepath = sessionInfo.session.path;
     save([basepath filesep sessionInfo.FileName '.Tracking.Behavior.mat'],'tracking');
-    
-  
-    
-    
     % Compute timestamps where speed is under threshold
     if speedFilter == 1
         positions{iCond}(tracking.speed.v<speedThresh,:) = [];
     end
-
 end
 
 
-
-% get firign rate maps & map stats
+%% get firign rate maps & map stats
 for unit = 1:length(spikes.times)
     for c = 1:conditions
             map{unit}{c} = Map(positions{c},spikes.times{unit},'smooth',smooth,'minTime',minTime,...
-                'nBins',nBins(c),'maxGap',maxGap,'mode',mode,'maxDistance',maxDistance);
-            stats{unit}{c} = MapStats(map{unit}{c},spikes.times{unit},'nBins',nBins(c),'verbose','on');
+                'nBins',nBins{c},'maxGap',maxGap,'mode',mode,'maxDistance',maxDistance);
+            stats{unit}{c} = MapStats(map{unit}{c},spikes.times{unit},'nBins',nBins{c},'verbose','on');
             
             % shuffling of spikes times
-            shuffling{unit}{c} = bz_SpikeShuffling(positions{c},spikes.times{unit},'smooth',smooth,'minTime',minTime,...
-                'nBins',nBins(c),'maxGap',maxGap,'mode',mode,'maxDistance',maxDistance,'numRand',numRand);
+            if spikeShuffling
+                shuffling{unit}{c} = bz_SpikeShuffling(positions{c},spikes.times{unit},'smooth',smooth,'minTime',minTime,...
+                    'nBins',nBins{c},'maxGap',maxGap,'mode',mode,'maxDistance',maxDistance,'numRand',numRand);
+            else
+                shuffling = [];
+            end
             
             % Periodic Firing
             if periodicAnalysis
-                periodic{unit}{c} = bz_PeriodicPower(map{unit}{c},shuffling{unit}{c},'random',true,'nBins',nBins);
+                periodic{unit}{c} = bz_PeriodicPower(map{unit}{c},shuffling{unit}{c},'random',true,'nBins',nBins{c});
             else
                 periodic{unit}{c} = [];
-            end
-            
+            end        
     end
 end
 % cmBin = (max(positions{1}(:,2))-min(positions{1}(:,2)))/nBins;
@@ -256,6 +255,15 @@ firingMaps.shuffling = shuffling;
 % Save periodic
 if periodicAnalysis
     firingMaps.periodic = periodic;
+end
+
+
+for unit = 1:length(spikes.times)
+    for c = 1:conditions
+        firingMaps.rateMapsUnSmooth{unit,1}{c} =map{unit}{c}.zUnSmooth;
+        firingMaps.countMapsUnSmooth{unit,1}{c} = map{unit}{c}.countUnSmooth;
+        firingMaps.occupancyUnSmooth{unit,1}{c} = map{unit}{c}.timeUnSmooth;
+    end
 end
 
 

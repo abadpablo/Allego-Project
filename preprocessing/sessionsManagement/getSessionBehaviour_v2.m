@@ -72,7 +72,7 @@ for ii = 1:size(sess,1)
         end
         
         
-        if strcmpi(tracking.apparatus.name,'yMaze')
+        if strcmpi(tracking.apparatus.name,'yMaze') | strcmpi(tracking.apparatus.name,'YMaze Apparatus')
 %             behaviorTemp.(sess(ii).name)= behaviorOpenField('verbose',verbose);
             behaviorTemp.(sess(ii).name)= behaviorYMaze('verbose',verbose); %% I need to create this function for the Ymaze paradigm
         elseif strcmpi(tracking.apparatus.name,'Open Field') || strcmpi(tracking.apparatus.name,'OpenField')
@@ -103,7 +103,13 @@ for ii = 1:size(efields,1)
     if ~isfield(behaviorTemp.(efields{ii}).masks, 'direction')
         behaviorTemp.(efields{ii}).masks.direction = behaviorTemp.(efields{ii}).masks.arm;
         behaviorTemp.(efields{ii}).masks.trialsDirection = behaviorTemp.(efields{ii}).masks.trials;
-    end
+    end    
+end
+
+% SubSessionsMask
+for ii=1:size(efields,1)
+    behaviorTemp.(efields{ii}).events.subSessionMask = tracking.events.subSessionsMask == ii;
+    behaviorTemp.(efields{ii}).events.subSessionMask(behaviorTemp.(efields{ii}).events.subSessionMask == 0) = [];
 end
 
 if size(tracking.events.subSessions,1) == size(efields,1)
@@ -111,11 +117,16 @@ if size(tracking.events.subSessions,1) == size(efields,1)
     for ii = 1:size(efields,1)
         preRec = tracking.events.subSessions(ii,1);
         timestamps = [timestamps; behaviorTemp.(efields{ii}).timestamps + preRec];
+%         timestamps{ii} = behaviorTemp.(efields{ii}).timestamps + preRec;
         x = [x; behaviorTemp.(efields{ii}).position.x];
         y = [y; behaviorTemp.(efields{ii}).position.y];
+%         x{ii} = behaviorTemp.(efields{ii}).position.x;
+%         y{ii} = behaviorTemp.(efields{ii}.position.y);
         if isfield(behaviorTemp.(efields{ii}),'headposition')
             x_head = [x_head; behaviorTemp.(efields{ii}).headposition.x];
             y_head = [y_head; behaviorTemp.(efields{ii}).headposition.y];
+%             x_head{ii} = behaviorTemp.(efields{ii}).headposition.x];
+%             y_head{ii} = behaviorTemp.(efields{ii}).headposition.y];
         end
         if isfield(behaviorTemp.(efields{ii}),'tailposition')
             x_tail = [x_tail; behaviorTemp.(efields{ii}).tailposition.x];

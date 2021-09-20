@@ -395,7 +395,8 @@ if length(v) < length(pos(:,1))
     ace = zeros(1,length(pos(:,1)));
     ax = zeros(1,length(pos(:,1)));
     ay = zeros(1,length(pos(:,1)));
-    
+
+       
     v = [nan(dif,1);s];
     vx = [nan(dif,1); sx];
     vy = [nan(dif,1); sy];
@@ -404,6 +405,19 @@ if length(v) < length(pos(:,1))
     ay = [nan(dif,1); acey];
     mspeed = nanmean(v);
     mace = nanmean(ace);
+
+end
+
+if length(x) < length(pos(:,1))
+    dif = length(pos(:,1)) - length(x);
+    pos_x = x;
+    pos_y = y;
+    clear x
+    clear y
+    x = zeros(1,length(pos(:,1)));
+    y = zeros(1,length(pos(:,2)));    
+    x = [nan(dif,1);pos_x];
+    y = [nan(dif,1);pos_y];
 end
 
 if ~isempty(head_pos)
@@ -427,12 +441,14 @@ if ~isempty(head_pos)
         clear head_ax
         clear head_ay
 
+
         head_v = zeros(1,length(head_pos(:,1)));
         head_vx = zeros(1,length(head_pos(:,1)));
         head_vy = zeros(1,length(head_pos(:,1)));
         head_ace = zeros(1,length(head_pos(:,1)));
         head_ax = zeros(1,length(head_pos(:,1)));
         head_ay = zeros(1,length(head_pos(:,1)));
+
 
         head_v = [nan(dif,1);head_s];
         head_vx = [nan(dif,1); head_sx];
@@ -442,6 +458,20 @@ if ~isempty(head_pos)
         head_ay = [nan(dif,1); head_acey];
         head_mspeed = nanmean(head_v);
         head_mace = nanmean(head_ace);
+
+        
+    end
+    
+    if length(head_x) < length(head_pos(:,1))
+    
+        head_pos_x = head_x;
+        head_pos_y = head_y;
+        clear head_x
+        clear head_y
+        head_x = zeros(1,length(head_pos(:,1)));
+        head_y = zeros(1,length(head_pos(:,1)));
+        head_x = [nan(dif,1);head_pos_x];
+        head_y = [nan(dif,1);head_pos_y];
     end
 
 else
@@ -456,7 +486,8 @@ else
     head_v = [];
     head_ace = [];
 end
-if ~isempty(head_pos)
+
+if ~isempty(tail_pos)
     [t,tail_x,tail_y,~,~,~,~] = trajectory_kalman_filter(tail_pos(:,1)',tail_pos(:,2)',timesamples,0);
     [~,~,~, tail_vx, tail_vy, tail_ax, tail_ay] = KalmanVel(tail_pos(:,1)',tail_pos(:,2)',timesamples,order);
     tail_v = sqrt(tail_vx.^2+tail_vy.^2);
@@ -480,8 +511,6 @@ if ~isempty(head_pos)
         tail_vx = zeros(1,length(tail_pos(:,1)));
         tail_vy = zeros(1,length(tail_pos(:,1)));
         tail_ace = zeros(1,length(tail_pos(:,1)));
-        tail_ax = zeros(1,length(tail_pos(:,1)));
-        tail_ay = zeros(1,length(tail_pos(:,1)));
 
         tail_v = [nan(dif,1);tail_s];
         tail_vx = [nan(dif,1); tail_sx];
@@ -491,6 +520,18 @@ if ~isempty(head_pos)
         tail_ay = [nan(dif,1); tail_acey];
         tail_mspeed = nanmean(tail_v);
         tail_mace = nanmean(tail_ace);
+
+    end
+    
+    if length(tail_x) < length(pos(:,1))
+        tail_pos_x = tail_x;
+        tail_pos_y = tail_y;
+        clear tail_x
+        clear tail_y
+        tail_ax = zeros(1,length(tail_pos(:,1)));
+        tail_ay = zeros(1,length(tail_pos(:,1)));
+        tail_x = [nan(dif,1);tail_pos_x];
+        tail_y = [nan(dif,1);tail_pos_y];
     end
 else
     tail_x = [];
