@@ -40,6 +40,11 @@ addParameter(p,'showWaveforms',true,@islogical);
 addParameter(p,'forceReloadRipples',false,@islogical);
 addParameter(p,'diffLFPs',false,@islogical);
 addParameter(p,'cellClassification',false,@islogical);
+addParameter(p,'thetaFreq',[4 12],@isnumeric);
+addParameter(p,'sgFreq',[30 65], @isnumeric);
+addParameter(p,'hgFreq',[66 130],@isnumeric);
+addParameter(p,'hfoFreq',[150 185], @isnumeric);
+addParameter(p,'showFig',false,@isnumeric);
 
 parse(p,varargin{:});
 
@@ -53,12 +58,17 @@ digitalChannelsList = p.Results.digitalChannelsList;
 analyzeSubSessions = p.Results.analyzeSubSessions;
 showWaveforms = p.Results.showWaveforms;
 diffLFPs = p.Results.diffLFPs;
+thetaFreq = p.Results.thetaFreq;
+sgFreq = p.Results.sgFreq;
+hgFreq = p.Results.hgFreq;
+hfoFreq = p.Results.hfoFreq;
+showFig = p.Results.showFig;
 
 prevPath = pwd;
 cd(basepath);
 
 if ischar(listOfAnalysis) && strcmpi(listOfAnalysis,'all')
-    listOfAnalysis = {'spikes','digitalPulses','ripples','tMazeBehaviour','linearMazeBehaviour','YMazeBehaviour','OpenFieldBehaviour','thetaModulation','behaviour','spikeTrain','performance','excel','CellExplorer'};
+    listOfAnalysis = {'spikes','digitalPulses','ripples','tMazeBehaviour','linearMazeBehaviour','YMazeBehaviour','OpenFieldBehaviour','thetaModulation','behaviour','spikeTrain','performance','excel','CellExplorer','lfp_analysis'};
 end
 
 if ~isempty(exclude)
@@ -183,7 +193,7 @@ if any(ismember(listOfAnalysis,'ripples'))
                     foldername = MergePoints.foldernames{ii};
                     lfp = bz_GetLFP(sessionInfo.channels,'restrict',timestamps);
                     
-                    rippleChannels{ii} = computeRippleChannel('discardShanks',excludeShanks,'timestamps_subSession',timestamps,'foldername',foldername);
+                    rippleChannels{ii} = computeRippleChannel('discardShanks',excludeShanks,'timestamps_subSession',timestamps,'foldername',foldername,'saveMat',false);
                     ripples{ii} = bz_FindRipples(basepath,rippleChannels{ii}.Ripple_Channel,'timestamps_subSession',timestamps,'foldername',foldername);
                     
                     shanks = sessionInfo.AnatGrps;
@@ -260,6 +270,8 @@ if any(ismember(listOfAnalysis,'ripples'))
                     saveas(gcf,['SummaryFigures\',strcat('ripplesPsth.',foldername),'.png']); title('Ripples');
                 end
                 save(fullfile(basepath, [sessionInfo.session.name, '.ripples.SubSession.events.mat']),'ripples')
+                % Maybe saving also the rippleChannels the same way
+                save(fullfile(basepath,[sessionInfo.session.name,'.channelInfo.SubSession.ripples.mat']),'rippleChannels')
             end
             catch
                 warning('Error on CSD and PSTH from ripples SubSessions !');
@@ -280,7 +292,7 @@ if any(ismember(listOfAnalysis,'ripples'))
                 ripples.maps = maps;
                 ripples.data = data;
                 ripples.stats = stats;
-                save(fullfile(basepath, [sessionInfo.session.name '.ripples.events.mat']),'ripples')
+                
                 % CSD
                 twin = 0.1;
                 evs = ripples.peaks;
@@ -342,6 +354,7 @@ if any(ismember(listOfAnalysis,'ripples'))
                     imagesc([t(1) t(end)],[1 size(spikeResponse,2)], spikeResponse); caxis([-3 3]); colormap(jet);
                     xlim([-.2 .2]); set(gca,'TickDir','out'); xlabel('Time'); ylabel('Cells');
                     saveas(gcf,['SummaryFigures\ripplesPsth.png']); title('Ripples');
+                    save(fullfile(basepath, [sessionInfo.session.name '.ripples.events.mat']),'ripples')
             catch
                 warning('Error on CSD and PSTH from ripples Whole Session !');
             end   
@@ -350,7 +363,7 @@ if any(ismember(listOfAnalysis,'ripples'))
 end
 
 
-%% 3 - THETA AND GAMMA PHASE MODULATION
+%% 3 - THETA AND GAMMA PHASE MODULATION BY SPIKES and POWER SPECTRUM PROFILE
 
 if any(ismember(listOfAnalysis,'thetaModulation'))
     
@@ -367,20 +380,20 @@ if any(ismember(listOfAnalysis,'thetaModulation'))
                     foldername = MergePoints.foldernames{i};
                     disp(['Theta, gamma and HFO modultaion for folder: ', foldername])
                     % Theta Profile
-                    powerProfile_theta{i} = bz_PowerSpectrumProfile([6 12], 'useparfor',false,'timestampsSubSession',timestamps,'foldername',foldername,'channels', sessionInfo.channels, 'showfig',true)
-                    % Low Gamma Profile
-                    powerProfile_sg{i} = bz_PowerSpectrumProfile([30 60], 'useparfor',false,'timestampsSubSession',timestamps,'foldername',foldername,'channels',sessionInfo.channels,'showfig',true);
+                    powerProfile_theta{i} = bz_PowerSpectrumProfile([thetaFreq(1) thetaFreq(2)], 'useparfor',false,'timestampsSubSession',timestamps,'foldername',foldername,'channels', sessionInfo.channels, 'showfig',true,'saveMat',false)
+                    % Low Gamma Profile                  
+                    powerProfile_sg{i} = bz_PowerSpectrumProfile([sgFreq(1) sgFreq(2)], 'useparfor',false,'timestampsSubSession',timestamps,'foldername',foldername,'channels',sessionInfo.channels,'showfig',true,'saveMat',false);
                     % HFO Profile
-                    powerProfile_hfo{i} = bz_PowerSpectrumProfile([120 250], 'useparfor',false,'timestampsSubSession',timestamps,'foldername',foldername,'channels',sessionInfo.channels,'showfig',true);
+                    powerProfile_hg{i} = bz_PowerSpectrumProfile([hgFreq(1) hgFreq(2)], 'useparfor',false,'timestampsSubSession',timestamps,'foldername',foldername,'channels',sessionInfo.channels,'showfig',true,'saveMat',false);
                     % get channels of interest % max theta power above pyr layer
-                    [~, a] = max(powerProfile_hfo{i}.mean);
-                    region{i}.CA1sp = powerProfile_hfo{i}.channels(a);
+                    [~, a] = max(powerProfile_theta{i}.mean);
+                    region{i}.CA1sp = powerProfile_theta{i}.channels(a);
 
                     for ii = 1:size(sessionInfo.AnatGrps,2)
                         if ismember(region{i}.CA1sp, sessionInfo.AnatGrps(ii).Channels)
-                            p_th{i} = powerProfile_theta{i}.mean(sessionInfo.AnatGrps(ii).Channels + 1);
-                            p_hfo{i} = powerProfile_hfo{i}.mean(sessionInfo.AnatGrps(ii).Channels + 1);
-                            p_gs{i} = powerProfile_sg{i}.mean(sessionInfo.AnatGrps(ii).Channels + 1);
+                            p_th{i} = powerProfile_theta{i}.mean(sessionInfo.AnatGrps(ii).Channels + 1);                
+                            p_sg{i} = powerProfile_sg{i}.mean(sessionInfo.AnatGrps(ii).Channels + 1);
+                            p_hg{i} = powerProfile_hg{i}.mean(sessionInfo.AnatGrps(ii).Channels + 1);
                             channels = sessionInfo.AnatGrps(ii).Channels;
                             [~,a] = max(p_th{i}(1:find(channels == region{i}.CA1sp)));
                             region{i}.CA1so = channels(a);
@@ -390,8 +403,8 @@ if any(ismember(listOfAnalysis,'thetaModulation'))
                             figure,
                             hold on
                             plot(1:length(channels), zscore(p_th{i}));
-                            plot(1:length(channels), zscore(p_hfo{i}));
-                            plot(1:length(channels), zscore(p_gs{i}));
+                            plot(1:length(channels), zscore(p_hg{i}));
+                            plot(1:length(channels), zscore(p_sg{i}));
                             xlim([1 length(channels)]);
                             set(gca,'XTick',1:length(channels),'XTickLabel',channels,'XTickLabelRotation',45);
                             ax = axis;
@@ -423,7 +436,7 @@ if any(ismember(listOfAnalysis,'thetaModulation'))
                     % phase modulation by spikes
 
                     if diffLFPs
-                        filename = dir('*PhaseLockingData.diffLFPs.SubSession.cellinfo.mat*'); 
+                        filename = dir('*PhaseLockingData.SubSession.diffLFPs.mat*'); 
                         if ~isempty(filename)
                             disp(['Phase Locking Data SubSession Different LFPs already detected ! Loading file: ', filename.name]);
                             load(filename.name)
@@ -431,35 +444,37 @@ if any(ismember(listOfAnalysis,'thetaModulation'))
                         else
                             for ii = 1:spikes.numcells
                                 lfp = bz_GetLFP(spikes.maxWaveformCh1(ii)-1,'noPrompts',true);
-                                PLD{i}{ii} = bz_PhaseModulationDifferentLFPs(spikes.times{ii},lfp,[6 12], 'intervals',timestamps,'plotting',false,'method','wavelet');
+                                PLD{i}{ii} = bz_PhaseModulationDifferentLFPs(spikes.times{ii},lfp,[thetaFreq(1) thetaFreq(2)], 'intervals',timestamps,'plotting',false,'method','wavelet');
                             end
                             PhaseLockingData{i} = PLD{i};
 
                         end
-                        disp('Theta modulation...')
-                        set(gcf,'Position',[100 -100 2500 1200]);
-                        for jj = 1:size(spikes.UID,2)
-                            subplot(7,ceil(size(spikes.UID,2)/7),jj); % autocorrelogram
-                            area([PLD{i}{jj}.phasebins; PLD{i}{jj}.phasebins + pi*2],[PLD{i}{jj}.phasedistros; PLD{i}{jj}.phasedistros],'EdgeColor','none');
-                            hold on
-                            ax = axis;
-                            x = 0:.001:4*pi;
-                            y = cos(x);
-                            y = y - min(y); y = ((y/max(y))*(ax(4)-ax(3)))+ax(3);
-                            h = plot(x,y,'-','color',[1 .8 .8]); uistack(h,'bottom') % [1 .8 .8]
-                            xlim([0 4*pi]);
-                            title(num2str(jj),'FontWeight','normal','FontSize',10);
+                        if showFig
+                            disp('Theta modulation...')
+                            set(gcf,'Position',[100 -100 2500 1200]);
+                            for jj = 1:size(spikes.UID,2)
+                                subplot(7,ceil(size(spikes.UID,2)/7),jj); % autocorrelogram
+                                area([PLD{i}{jj}.phasebins; PLD{i}{jj}.phasebins + pi*2],[PLD{i}{jj}.phasedistros; PLD{i}{jj}.phasedistros],'EdgeColor','none');
+                                hold on
+                                ax = axis;
+                                x = 0:.001:4*pi;
+                                y = cos(x);
+                                y = y - min(y); y = ((y/max(y))*(ax(4)-ax(3)))+ax(3);
+                                h = plot(x,y,'-','color',[1 .8 .8]); uistack(h,'bottom') % [1 .8 .8]
+                                xlim([0 4*pi]);
+                                title(num2str(jj),'FontWeight','normal','FontSize',10);
 
-                            if jj == 1
-                                ylabel('prob');
-                            elseif jj == size(spikes.UID,2)
-                                set(gca,'XTick',[0:2*pi:4*pi],'XTickLabel',{'0','2\pi','4\pi'},'YTick',[])
-                                xlabel('phase (rad)');
-                            else
-                                set(gca,'YTick',[],'XTick',[]);
+                                if jj == 1
+                                    ylabel('prob');
+                                elseif jj == size(spikes.UID,2)
+                                    set(gca,'XTick',[0:2*pi:4*pi],'XTickLabel',{'0','2\pi','4\pi'},'YTick',[])
+                                    xlabel('phase (rad)');
+                                else
+                                    set(gca,'YTick',[],'XTick',[]);
+                                end 
                             end
+                            saveas(gcf,['PhaseModulationFig\thetaModDiffLFPS_',foldername,'.png']);
                         end
-                        saveas(gcf,['PhaseModulationFig\thetaModDiffLFPS_',foldername,'.png']);
 
                         % gamma modulation
                         disp('Gamma modulation...');
@@ -470,97 +485,108 @@ if any(ismember(listOfAnalysis,'thetaModulation'))
                             PLD_sg = PhaseLockingData_sg;
                         else
                             for ii=1:spikes.numcells
-                                lfp = bz_GetLFP(spikes.maxWaveformCh1(ii)-1,'noPrompts',true);
-                                PLD_sg{i}{ii} = bz_PhaseModulationDifferentLFPs(spikes.times{ii},lfp,[30 60],'intervals',timestamps,'plotting',false,'method','wavelet');                              
+                                lfp = bz_GetLFP(spikes.maxWaveformCh1(ii)-1,'noPrompts',true,'restrict',timestamps);
+                                PLD_sg{i}{ii} = bz_PhaseModulationDifferentLFPs(spikes.times{ii},lfp,[sgFreq(1) sgFreq(2)],'intervals',timestamps,'plotting',false,'method','wavelet');                              
                             end
                             PhaseLockingData_sg{i} = PLD_sg{i};
                         end
+                        
+                        if showFig
+                            figure
+                            set(gcf,'Position',[100 -100 2500 1200]);
+                            for jj = 1:size(spikes.UID,2)
+                                subplot(7,ceil(size(spikes.UID,2)/7),jj); % autocorrelogram
+                                area([PLD_sg{i}{jj}.phasebins; PLD_sg{i}{jj}.phasebins + pi*2],[PLD_sg{i}{jj}.phasedistros; PLD_sg{i}{jj}.phasedistros],'EdgeColor','none');
+                                hold on
+                                ax = axis;
+                                x = 0:.001:4*pi;
+                                y = cos(x);
+                                y = y - min(y); y = ((y/max(y))*(ax(4)-ax(3)))+ax(3);
+                                h = plot(x,y,'-','color',[1 .8 .8]); uistack(h,'bottom') % [1 .8 .8]
+                                xlim([0 4*pi]);
+                                title(num2str(jj),'FontWeight','normal','FontSize',10);
 
-                        figure
-                        set(gcf,'Position',[100 -100 2500 1200]);
-                        for jj = 1:size(spikes.UID,2)
-                            subplot(7,ceil(size(spikes.UID,2)/7),jj); % autocorrelogram
-                            area([PLD_sg{i}{jj}.phasebins; PLD_sg{i}{jj}.phasebins + pi*2],[PLD_sg{i}{jj}.phasedistros; PLD_sg{i}{jj}.phasedistros],'EdgeColor','none');
-                            hold on
-                            ax = axis;
-                            x = 0:.001:4*pi;
-                            y = cos(x);
-                            y = y - min(y); y = ((y/max(y))*(ax(4)-ax(3)))+ax(3);
-                            h = plot(x,y,'-','color',[1 .8 .8]); uistack(h,'bottom') % [1 .8 .8]
-                            xlim([0 4*pi]);
-                            title(num2str(jj),'FontWeight','normal','FontSize',10);
-
-                            if jj == 1
-                                ylabel('prob');
-                            elseif jj == size(spikes.UID,2)
-                                set(gca,'XTick',[0:2*pi:4*pi],'XTickLabel',{'0','2\pi','4\pi'},'YTick',[])
-                                xlabel('phase (rad)');
-                            else
-                                set(gca,'YTick',[],'XTick',[]);
+                                if jj == 1
+                                    ylabel('prob');
+                                elseif jj == size(spikes.UID,2)
+                                    set(gca,'XTick',[0:2*pi:4*pi],'XTickLabel',{'0','2\pi','4\pi'},'YTick',[])
+                                    xlabel('phase (rad)');
+                                else
+                                    set(gca,'YTick',[],'XTick',[]);
+                                end
                             end
+                            saveas(gcf,['PhaseModulationFig\sgModDiffLFPS_',foldername,'.png']);
                         end
-                        saveas(gcf,['PhaseModulationFig\sgModDiffLFPS_',foldername,'.png']);
 
                     else
-                        PLD{i} = bz_PhaseModulation(spikes,lfpT,[6 12], 'intervals',timestamps,'plotting',true,'method','wavelet','saveMat',true);
-                        disp('Theta modlation...')
-                        set(gcf,'Position',[100 -100 2500 1200]);
-                        for jj = 1:size(spikes.UID,2)
-                            subplot(7,ceil(size(spikes.UID,2)/7),jj); % autocorrelogram
-                            area([PLD{i}.phasebins; PLD{i}.phasebins + pi*2],[PLD{i}.phasedistros(:,jj); PLD.phasedistros{i}(:,jj)],'EdgeColor','none');
-                            hold on
-                            ax = axis;
-                            x = 0:.001:4*pi;
-                            y = cos(x);
-                            y = y - min(y); y = ((y/max(y))*(ax(4)-ax(3)))+ax(3);
-                            h = plot(x,y,'-','color',[1 .8 .8]); uistack(h,'bottom') % [1 .8 .8]
-                            xlim([0 4*pi]);
-                            title(num2str(jj),'FontWeight','normal','FontSize',10);
+                        PLD{i} = bz_PhaseModulation(spikes,lfpT,[thetaFreq(1) thetaFreq(2)], 'intervals',timestamps,'plotting',true,'method','wavelet','saveMat',true);
+                        if showFig
+                            disp('Theta modlation...')
+                            set(gcf,'Position',[100 -100 2500 1200]);
+                            for jj = 1:size(spikes.UID,2)
+                                subplot(7,ceil(size(spikes.UID,2)/7),jj); % autocorrelogram
+                                area([PLD{i}.phasebins; PLD{i}.phasebins + pi*2],[PLD{i}.phasedistros(:,jj); PLD.phasedistros{i}(:,jj)],'EdgeColor','none');
+                                hold on
+                                ax = axis;
+                                x = 0:.001:4*pi;
+                                y = cos(x);
+                                y = y - min(y); y = ((y/max(y))*(ax(4)-ax(3)))+ax(3);
+                                h = plot(x,y,'-','color',[1 .8 .8]); uistack(h,'bottom') % [1 .8 .8]
+                                xlim([0 4*pi]);
+                                title(num2str(jj),'FontWeight','normal','FontSize',10);
 
-                            if jj == 1
-                                ylabel('prob');
-                            elseif jj == size(spikes.UID,2)
-                                set(gca,'XTick',[0:2*pi:4*pi],'XTickLabel',{'0','2\pi','4\pi'},'YTick',[])
-                                xlabel('phase (rad)');
-                            else
-                                set(gca,'YTick',[],'XTick',[]);
+                                if jj == 1
+                                    ylabel('prob');
+                                elseif jj == size(spikes.UID,2)
+                                    set(gca,'XTick',[0:2*pi:4*pi],'XTickLabel',{'0','2\pi','4\pi'},'YTick',[])
+                                    xlabel('phase (rad)');
+                                else
+                                    set(gca,'YTick',[],'XTick',[]);
+                                end
                             end
+                            saveas(gcf,['SummaryFigures\thetaMod_',foldername,'.png']);
                         end
-                        saveas(gcf,['SummaryFigures\thetaMod_',foldername,'.png']);
 
                         % gamma modulation
-                        PLD_sg{i} = bz_PhaseModulation(spikes,lfpT,[30 60],'intervals',timestamps,'plotting',false,'method','wavelet','saveMat',true);     
+                        PLD_sg{i} = bz_PhaseModulation(spikes,lfpT,[sgFreq(1) sgFreq(2)],'intervals',timestamps,'plotting',false,'method','wavelet','saveMat',true);     
                         disp('Gamma modulation...');
-                        figure
-                        set(gcf,'Position',[100 -100 2500 1200]);
-                        for jj = 1:size(spikes.UID,2)
-                            subplot(7,ceil(size(spikes.UID,2)/7),jj); % autocorrelogram
-                            area([PLD_sg{i}.phasebins; PLD_sg{i}.phasebins + pi*2],[PLD_sg{i}.phasedistros(:,jj); PLD_sg{i}.phasedistros(:,jj)],'EdgeColor','none');
-                            hold on
-                            ax = axis;
-                            x = 0:.001:4*pi;
-                            y = cos(x);
-                            y = y - min(y); y = ((y/max(y))*(ax(4)-ax(3)))+ax(3);
-                            h = plot(x,y,'-','color',[1 .8 .8]); uistack(h,'bottom') % [1 .8 .8]
-                            xlim([0 4*pi]);
-                            title(num2str(jj),'FontWeight','normal','FontSize',10);
+                        if showFig
+                            figure
+                            set(gcf,'Position',[100 -100 2500 1200]);
+                            for jj = 1:size(spikes.UID,2)
+                                subplot(7,ceil(size(spikes.UID,2)/7),jj); % autocorrelogram
+                                area([PLD_sg{i}.phasebins; PLD_sg{i}.phasebins + pi*2],[PLD_sg{i}.phasedistros(:,jj); PLD_sg{i}.phasedistros(:,jj)],'EdgeColor','none');
+                                hold on
+                                ax = axis;
+                                x = 0:.001:4*pi;
+                                y = cos(x);
+                                y = y - min(y); y = ((y/max(y))*(ax(4)-ax(3)))+ax(3);
+                                h = plot(x,y,'-','color',[1 .8 .8]); uistack(h,'bottom') % [1 .8 .8]
+                                xlim([0 4*pi]);
+                                title(num2str(jj),'FontWeight','normal','FontSize',10);
 
-                            if jj == 1
-                                ylabel('prob');
-                            elseif jj == size(spikes.UID,2)
-                                set(gca,'XTick',[0:2*pi:4*pi],'XTickLabel',{'0','2\pi','4\pi'},'YTick',[])
-                                xlabel('phase (rad)');
-                            else
-                                set(gca,'YTick',[],'XTick',[]);
+                                if jj == 1
+                                    ylabel('prob');
+                                elseif jj == size(spikes.UID,2)
+                                    set(gca,'XTick',[0:2*pi:4*pi],'XTickLabel',{'0','2\pi','4\pi'},'YTick',[])
+                                    xlabel('phase (rad)');
+                                else
+                                    set(gca,'YTick',[],'XTick',[]);
+                                end
                             end
+                            saveas([gcf,'SummaryFigures\gammaMod_',foldername,'.png']);
                         end
-                        saveas([gcf,'SummaryFigures\gammaMod_',foldername,'.png']);
                     end    
                 end
-                save([sessionInfo.FileName,'.PowerSpectrumProfile_',num2str(powerProfile_theta{i}.processinginfo.params.frange(1)),'_',num2str(powerProfile_theta{i}.processinginfo.params.frange(2)),'.SubSession.channelinfo.mat']);
+                % save Power Spectrum Profile theta
+                save([sessionInfo.FileName,'.PowerSpectrumProfile_',num2str(powerProfile_theta{1}.processinginfo.params.frange(1)),'_',num2str(powerProfile_theta{1}.processinginfo.params.frange(2)),'.SubSession.channelinfo.mat'],'powerProfile_theta');                
+                % save Power Spectrum Profile sg
+                save([sessionInfo.FileName,'.PowerSpectrumProfile_',num2str(powerProfile_sg{1}.processinginfo.params.frange(1)),'_',num2str(powerProfile_sg{1}.processinginfo.params.frange(2)),'.SubSession.channelinfo.mat'],'powerProfile_sg');
+                % save Power Spectrum Profile hg
+                save([sessionInfo.FileName,'.PowerSpectrumProfile_',num2str(powerProfile_hg{1}.processinginfo.params.frange(1)),'_',num2str(powerProfile_hg{1}.processinginfo.params.frange(2)),'.SubSession.channelinfo.mat'],'powerProfile_hg');
                 save([sessionInfo.FileName,'.region.mat'],'region');
-                save([sessionInfo.session.name '.PhaseLockingData.diffLFPs.cellinfo.mat'],'PhaseLockingData');
-                save([sessionInfo.session.name '.PhaseLockingData_sg.diffLFPs.cellinfo.mat'],'PhaseLockingData_sg');
+                save([sessionInfo.session.name '.PhaseLockingData.SubSession.cellinfo.mat'],'PhaseLockingData');
+                save([sessionInfo.session.name '.PhaseLockingData_sg.SubSession.cellinfo.mat'],'PhaseLockingData_sg');
             end
         catch
             warning('It has not been possible to run theta and gamma mod code for SubSessions...')
@@ -570,20 +596,20 @@ if any(ismember(listOfAnalysis,'thetaModulation'))
             disp('Theta, gamma and HFO modulation...')
             [sessionInfo] = bz_getSessionInfo(pwd,'noPrompts',true);
             % Theta Profile
-            powerProfile_theta = bz_PowerSpectrumProfile([6 12], 'channels',sessionInfo.channels,'showfig',true);
+            powerProfile_theta = bz_PowerSpectrumProfile([thetaFreq(1) thetaFreq(2)], 'channels',sessionInfo.channels,'showfig',true);
             % Low Gamma Profile
-            powerProfile_sg = bz_PowerSpectrumProfile([30 60], 'channels',sessionInfo.channels,'showfig',true);
+            powerProfile_sg = bz_PowerSpectrumProfile([sgFreq(1) sgFreq(2)], 'channels',sessionInfo.channels,'showfig',true);
             % HFO Profile
-            powerProfile_hfo = bz_PowerSpectrumProfile([120 250], 'channels', sessionInfo.channels,'showfig',true);
+            powerProfile_hg = bz_PowerSpectrumProfile([hgFreq(1) hgFreq(2)], 'channels', sessionInfo.channels,'showfig',true);
             % get channels of interest % max theta power above pyr layer
-            [~, a] = max(powerProfile_hfo.mean);
-            region.CA1sp = powerProfile_hfo.channels(a);
+            [~, a] = max(powerProfile_theta.mean);
+            region.CA1sp = powerProfile_theta.channels(a);
 
             for ii = 1:size(sessionInfo.AnatGrps,2)
                 if ismember(region.CA1sp, sessionInfo.AnatGrps(ii).Channels)
                     p_th = powerProfile_theta.mean(sessionInfo.AnatGrps(ii).Channels + 1);
-                    p_hfo = powerProfile_hfo.mean(sessionInfo.AnatGrps(ii).Channels + 1);
-                    p_gs = powerProfile_sg.mean(sessionInfo.AnatGrps(ii).Channels + 1);
+                    p_hg = powerProfile_hg.mean(sessionInfo.AnatGrps(ii).Channels + 1);
+                    p_sg = powerProfile_sg.mean(sessionInfo.AnatGrps(ii).Channels + 1);
                     channels = sessionInfo.AnatGrps(ii).Channels;
                     [~,a] = max(p_th(1:find(channels == region.CA1sp)));
                     region.CA1so = channels(a);
@@ -593,8 +619,8 @@ if any(ismember(listOfAnalysis,'thetaModulation'))
                     figure,
                     hold on
                     plot(1:length(channels), zscore(p_th));
-                    plot(1:length(channels), zscore(p_hfo));
-                    plot(1:length(channels), zscore(p_gs));
+                    plot(1:length(channels), zscore(p_hg));
+                    plot(1:length(channels), zscore(p_sg));
                     xlim([1 length(channels)]);
                     set(gca,'XTick',1:length(channels),'XTickLabel',channels,'XTickLabelRotation',45);
                     ax = axis;
@@ -638,7 +664,7 @@ if any(ismember(listOfAnalysis,'thetaModulation'))
                 else
                     for ii = 1:spikes.numcells
                         lfp = bz_GetLFP(spikes.maxWaveformCh1(ii)-1,'noPrompts',true);
-                        PLD{ii} = bz_PhaseModulationDifferentLFPs(spikes.times{ii},lfp,[6 12], 'plotting',false,'method','wavelet');
+                        PLD{ii} = bz_PhaseModulationDifferentLFPs(spikes.times{ii},lfp,[thetaFreq(1) thetaFreq(2)], 'plotting',false,'method','wavelet');
                     end
                     PhaseLockingData = PLD;
                     save([sessionInfo.session.name '.PhaseLockingData.diffLFPs.cellinfo.mat'],'PhaseLockingData');
@@ -679,7 +705,7 @@ if any(ismember(listOfAnalysis,'thetaModulation'))
                 else
                     for ii=1:spikes.numcells
                         lfp = bz_GetLFP(spikes.maxWaveformCh1(ii)-1,'noPrompts',true);
-                        PLD_sg{ii} = bz_PhaseModulationDifferentLFPs(spikes.times{ii},lfp,[30 60],'plotting',false,'method','wavelet');     
+                        PLD_sg{ii} = bz_PhaseModulationDifferentLFPs(spikes.times{ii},lfp,[sgFreq(1) sgFreq(2)],'plotting',false,'method','wavelet');     
                         PhaseLockingData_sg = PLD_sg;
                         save([sessionInfo.session.name '.PhaseLockingData_sg.diffLFPs.cellinfo.mat'],'PhaseLockingData_sg');
                     end
@@ -711,7 +737,7 @@ if any(ismember(listOfAnalysis,'thetaModulation'))
                 saveas(gcf,'PhaseModulationFig\sgModDiffLFPS.png');
 
             else
-                PLD = bz_PhaseModulation(spikes,lfpT,[6 12], 'plotting',true,'method','wavelet','saveMat',true);
+                PLD = bz_PhaseModulation(spikes,lfpT,[thetaFreq(1) thetaFreq(2)], 'plotting',true,'method','wavelet','saveMat',true);
                 disp('Theta modlation...')
                 set(gcf,'Position',[100 -100 2500 1200]);
                 for jj = 1:size(spikes.UID,2)
@@ -738,7 +764,7 @@ if any(ismember(listOfAnalysis,'thetaModulation'))
                 saveas(gcf,'SummaryFigures\thetaMod.png');
 
                 % gamma modulation
-                PLD = bz_PhaseModulation(spikes,lfpT,[30 60],'plotting',false,'method','wavelet','saveMat',true);     
+                PLD = bz_PhaseModulation(spikes,lfpT,[sgFreq(1) sgFreq(2)],'plotting',false,'method','wavelet','saveMat',true);     
                 disp('Gamma modulation...');
                 figure
                 set(gcf,'Position',[100 -100 2500 1200]);
@@ -765,6 +791,16 @@ if any(ismember(listOfAnalysis,'thetaModulation'))
                 end
                 saveas(gcf,'SummaryFigures\gammaMod.png');
             end
+            % save Power Spectrum Profile theta
+            save([sessionInfo.FileName,'.PowerSpectrumProfile_',num2str(powerProfile_theta{1}.processinginfo.params.frange(1)),'_',num2str(powerProfile_theta{1}.processinginfo.params.frange(2)),'.channelinfo.mat'],'powerProfile_theta');                
+            % save Power Spectrum Profile sg
+            save([sessionInfo.FileName,'.PowerSpectrumProfile_',num2str(powerProfile_sg{1}.processinginfo.params.frange(1)),'_',num2str(powerProfile_sg{1}.processinginfo.params.frange(2)),'.channelinfo.mat'],'powerProfile_sg');
+            % save Power Spectrum Profile hg
+            save([sessionInfo.FileName,'.PowerSpectrumProfile_',num2str(powerProfile_hg{1}.processinginfo.params.frange(1)),'_',num2str(powerProfile_hg{1}.processinginfo.params.frange(2)),'.channelinfo.mat'],'powerProfile_hg');
+            save([sessionInfo.FileName,'.region.mat'],'region');
+            save([sessionInfo.session.name '.PhaseLockingData.cellinfo.mat'],'PhaseLockingData');
+            save([sessionInfo.session.name '.PhaseLockingData_sg.cellinfo.mat'],'PhaseLockingData_sg');
+            
         catch
             warning('It has not been possible to run theta and gamma mod code...')
         end
@@ -773,8 +809,7 @@ end
 
 %% 4- BEHAVIOUR
 
-if any(ismember(listOfAnalysis,'behaviour'))
-    
+if any(ismember(listOfAnalysis,'behaviour'))   
     try
         disp('Computing behaviour variables...')
         tracking = getSessionTracking();
@@ -791,7 +826,6 @@ end
 %% 5  BEHAVIOUR PERFORMANCE
 
 if any(ismember(listOfAnalysis,'performance'))
-    
     try
         disp('Computing Performance for Experimental Paradigm (YMaze/TMaze) ...');
         tracking = getSessionTracking();
@@ -814,35 +848,10 @@ if any(ismember(listOfAnalysis,'spikeTrain'))
     end
 end
 
-%% 7 - CREATION EXCEL FILE 
 
-if any(ismember(listOfAnalysis,'excel'))
-    try
-        disp('Creating Excel file...')
-        excel = bz_createExcel('basepath',basepath,'analyzeSubSessions',analyzeSubSessions,'diffLFPs',diffLFPs);
-       
-        spikes = loadSpikes('getWaveformsFromDat', getWaveformsFromDat, 'forceReload',false, 'showWaveforms',showWaveforms);
-        tracking = getSessionTracking();
-        try
-            performance = getSessionPerformance('tracking',tracking);
-        catch
-            warning('Performance not possible to analyze...')
-        end
-        
-        
-        
-    catch
-        warning('It has not been possible to create Excel file...')
-    
-    
-    end
-    
-end
-
-%% 8 - CELL EXPLORER
+%% 7 - CELL EXPLORER
 
 if any(ismember(listOfAnalysis,'CellExplorer'))
-    
     try
         disp('Running CellExplorer code...');
         session = sessionTemplate(basepath,'showGUI',false);        
@@ -852,16 +861,209 @@ if any(ismember(listOfAnalysis,'CellExplorer'))
     catch
         disp('It is not possible to run CellExplorer code...')
     end
-    
 end
 
+%% 8 - LFP ANALYSIS
+if any(ismember(listOfAnalysis,'lfp_analysis'))
+    mkdir('lfpAnalysisFigures')
+%     analyzeSubSessions = true;
+  if analyzeSubSessions   
+      try
+          disp('Computing lfp_analysis for SubSessions...')
+          session = loadSession;
+          sessionInfo = bz_getSessionInfo(pwd,'noPrompts',true);
+          shanks = sessionInfo.AnatGrps;
+          shanks(excludeShanks) = [];
+          
+          if exist([basepath filesep strcat(sessionInfo.session.name,'.MergePoints.events.mat')],'file')
+              load(strcat(sessionInfo.session.name,'.MergePoints.events.mat'));
+              count = 1;
+              
+              for ii=1:size(MergePoints.foldernames,2)
+                  timestamps = MergePoints.timestamps(ii,:);
+                  foldername = MergePoints.foldernames{ii};
+                  % Pick Channel of Ripples and SW
+                  if ~isempty(dir([basepath filesep '*.channelinfo.ripples.mat']))
+                     disp('Channelinfo.ripples.mat file detected ! Loading file.')
+                     file = dir([basepath filesep '*channelinfo.ripples.mat'])
+                     load(file.name);
+                  end
+                  lfp1 = bz_GetLFP(rippleChannels.Ripple_Channel,'restrict',timestamps);
+                  lfp2 = bz_GetLFP(rippleChannels.Sharpwave_Channel,'restrict',timestamps);
+                  % Compute Coherence between one channel of each shank
+                  coherencePerShank.(foldername) = bz_coherencePerShank('timestampsSubSession',timestamps,'foldername',foldername,'saveMat',false);
+                  % Compute Coherence between two channels
+                  coherogram.(foldername) = bz_MTCoherogram(lfp1,lfp2,'foldername',foldername,'range',[0 200], 'window',1,'saveMat',false);
+                  % Compute Cross-Frequency Coupling
+                  lfp = bz_GetLFP('all','restrict',timestamps);
+                  CFCPhaseAmp_lg.(foldername) = bz_CFCPhaseAmp(lfp,[thetaFreq(1):1:thetaFreq(2)],[sgFreq(1):1:sgFreq(2)],'phaseCh',rippleChannels.Ripple_Channel,'ampCh',rippleChannels.Ripple_Channel,'foldername',foldername,'saveMat',false);
+                  CFCPhaseAmp_hg.(foldername) = bz_CFCPhaseAmp(lfp,[thetaFreq(1):1:thetaFreq(2)],[hgFreq(1):1:hgFreq(2)],'phaseCh',rippleChannels.Ripple_Channel,'ampCh',rippleChannels.Ripple_Channel,'foldername',foldername,'saveMat',false);
+                  CFCPhaseAmp_hfo.(foldername) = bz_CFCPhaseAmp(lfp,[thetaFreq(1):1:thetaFreq(2)],[hfoFreq(1):1:hfoFreq(2)],'phaseCh',rippleChannels.Ripple_Channel,'ampCh',rippleChannels.Ripple_Channel,'foldername',foldername,'saveMat',false);
+                  CFCPhaseAmp.(foldername) = bz_CFCPhaseAmp(lfp,[thetaFreq(1):1:thetaFreq(2)],[1:1:200],'phaseCh',rippleChannels.Ripple_Channel,'ampCh',rippleChannels.Ripple_Channel,'foldername',foldername,'saveMat',false);
+                  
+                  PhaseAmpCoupling_lg.(foldername) = bz_PhaseAmpCouplingByAmp(lfp,[thetaFreq(1) thetaFreq(2)], [sgFreq(1) sgFreq(2)],'phaseCh',rippleChannels.Ripple_Channel,'ampCh',rippleChannels.Ripple_Channel,'foldername',foldername,'saveMat',false);
+                  PhaseAmpCoupling_hg.(foldername) = bz_PhaseAmpCouplingByAmp(lfp,[thetaFreq(1) thetaFreq(2)], [hgFreq(1) hgFreq(2)],'phaseCh',rippleChannels.Ripple_Channel,'ampCh',rippleChannels.Ripple_Channel,'foldername',foldername,'saveMat',false);
+                  PhaseAmpCoupling_hfo.(foldername) = bz_PhaseAmpCouplingByAmp(lfp,[thetaFreq(1) thetaFreq(2)], [hfoFreq(1) hfoFreq(2)],'phaseCh',rippleChannels.Ripple_Channel,'ampCh',rippleChannels.Ripple_Channel,'foldername',foldername,'saveMat',false);                  
+                  PhaseAmpCoupling.(foldername) = bz_PhaseAmpCouplingByAmp(lfp,[thetaFreq(1) thetaFreq(2)], [1 200],'phaseCh',rippleChannels.Ripple_Channel,'ampCh',rippleChannels.Ripple_Channel','foldername',foldername,'saveMat',false);                  
+                  % Power-Power Correlation
+                  lfp = bz_GetLFP([rippleChannels.Ripple_Channel rippleChannels.Sharpwave_Channel],'restrict',timestamps);
+                  comodulogram.(foldername) = bz_Comodulogram(lfp,[],[],'foldername',foldername,'ch1',rippleChannels.Ripple_Channel, 'ch2',rippleChannels.Sharpwave_Channel,'saveMat',false,'saveMat',false);
+                  % Cross-Spectral Matrix ¿How to plot?
+                  %bz_MTCrossSpec(lfp);
+                  
+                  % GMI Index
+                  % Maybe we can compute this index over a wide range of
+                  % channels (as an input)
+                  lfp = bz_GetLFP('all','restrict',timestamps);
+                  GMI_lg.(foldername) = bz_GMI(lfp,[thetaFreq(1) thetaFreq(2)], [sgFreq(1) sgFreq(2)],'phaseCh',sessionInfo.channels,'ampCh',sessionInfo.channels,'foldername',foldername,'saveMat',false);
+%                   bz_GMI(lfp,[4 12], [30 80],'phaseCh',rippleChannels.Ripple_Channel,'ampCh',rippleChannels.Ripple_Channel,'foldername',foldername);
+                  GMI_hg.(foldername) = bz_GMI(lfp,[thetaFreq(1) thetaFreq(2)], [hgFreq(1) hgFreq(2)],'phaseCh',sessionInfo.channels,'ampCh',sessionInfo.channels,'foldername',foldername,'saveMat',false);
+%                   bz_GMI(lfp,[4 12], [80 150],'phaseCh',rippleChannels.Ripple_Channel,'ampCh',rippleChannels.Ripple_Channel,'foldername',foldername);
+                  GMI_hfo.(foldername) = bz_GMI(lfp,[thetaFreq(1) thetaFreq(2)], [hfoFreq(1) hfoFreq(2)],'phaseCh',sessionInfo.channels,'ampCh',sessionInfo.channels,'foldername',fodername,'saveMat',false);
 
-%% 9 - PLOT PLACE FIELDS
+                  GMI.(foldername) = bz_GMI(lfp,[thetaFreq(1) thetaFreq(2)], [1 200],'phaseCh',sessionInfo.channels,'ampCh',sessionInfo.channels,'foldername',foldername,'saveMat',false);
+%                   bz_GMI(lfp,[4 12], [1 200],'phaseCh',rippleChannels.Ripple_Channel,'ampCh',rippleChannels.Ripple_Channel,'foldername',foldername);
+
+                  % GMI Index Tort
+                  % Maybe we can compute this index over a wide range of
+                  % channels (as an input)
+                  lfp = bz_GetLFP('all','restrict',timestamps);
+                  MI_lg.(foldername) = bz_GMITort(lfp,[thetaFreq(1) thetaFreq(2)], [sgFreq(1) sgFreq(2)], 'phaseCh',sessionInfo.channels,'ampCh',sessionInfo.channels,'foldername',foldername,'saveMat',false);
+                  MI_hg.(foldername) = bz_GMITort(lfp,[thetaFreq(1) thetaFreq(2)],[hgFreq(1) hgFreq(2)], 'phaseCh',sessionInfo.channels,'ampCh',sessionInfo.channels,'fodlername',foldername,'saveMat',false);
+                  MI_hfo.(foldername) = bz_GMITort(lfp,[thetaFreq(1) thetaFreq(2)], [hfoFreq(1) hfoFreq(2)], 'phaseCh',sessionInfo.channels,'ampCh',sessionInfo.channels,'foldername',foldername,'saveMat',false);
+                  MI.(foldername) = bz_GMITort(lfp,[thetaFreq(1) thetaFreq(2)], [1 200], 'phaseCh',sessionInfo.channels,'ampCh',sessionInfo.channels,'foldername',foldername,'saveMat',false);
+              end
+              
+              % Saving .mat files
+              % Coherence per Shank
+              save([basepath filesep sessionInfo.FileName,'.Coherence_Shanks.SubSession.lfp.mat'],'coherencePerShank');
+              % Coherogram
+              save([basepath filesep sessionInfo.FileName,'Coherogram.SubSession.lfp.mat'],'coherogram');
+              % CFCPhaseAmp lg
+              save([basepath filesep sessionInfo.FileName,'CFCPhaseAmp_',num2str(sgFreq(1)),'_',num2str(sgFreq(2)),'.SubSession.lfp.mat'],'CFCPhaseAmp_lg');
+              % CFCPhaseAmp hg
+              save([basepath filesep sessionInfo.FileName,'CFCPhaseAmp_',num2str(hgFreq(1)),'_',num2str(hgFreq(2)),'.SubSession.lfp.mat'],'CFCPhaseAmp_hg');
+              % CFCPhaseAmp hfo
+              save([basepath filesep sessionInfo.FileName,'CFCPhaseAmp_',num2str(hfoFreq(1)),'_',num2str(hfoFreq(2)),'.SubSession.lfp.mat'],'CFCPhaseAmp_hfo');
+              % CFCPhaseAmp 
+              save([basepath filesep sessionInfo.FileName,'CFCPhaseAmp.SubSession.lfp.mat'],'CFCPhaseAmp');
+              % PhaseAmpCouplingByAmp lg
+              save([basepath filesep sessionInfo.FileName,'PhaseAmpCouplingByAmp_',num2str(sgFreq(1)),'_',num2str(sgFreq(2)),'.SubSession.lfp.mat'],'PhaseAmpCoupling_lg');
+              % PhaseAmpCouplingByAmp hg
+              save([basepath filesep sessionInfo.FileName,'PhaseAmpCouplingByAmp_',num2str(hgFreq(1)),'_',num2str(hgFreq(2)),'.SubSession.lfp.mat'],'PhaseAmpCoupling_hg');
+              % PhaseAmpCouplingByAmp hfo
+              save([basepath filesep sessionInfo.FileName,'PhaseAmpCouplingByAmp_',num2str(hfoFreq(1)),'_',num2str(hfoFreq(2)),'.SubSession.lfp.mat'],'PhaseAmpCoupling_hfo');
+              % PhaseAmpCouplingByAmp
+              save([basepath filesep sessionInfo.FileName,'PhaseAmpCouplingByAmp.SubSession.lfp.mat'],'PhaseAmpCoupling');
+              % Comodulogram
+              %save([basepath filesep sessionInfo.FileName,'Comodulogram'],'comodulogram');
+              % GMI lg
+              save([basepath filesep sessionInfo.FileName,'GMI_',num2str(sgFreq(1)),'_',num2str(sgFreq(2)),'.SubSession.lfp.mat'],'GMI_lg');
+              % GMI hg
+              save([basepath filesep sessionInfo.FileName,'GMI_',num2str(hgFreq(1)),'_',num2str(hgFreq(2)),'.SubSession.lfp.mat'],'GMI_hg');
+              % GMI hfo
+              save([basepath filesep sessionInfo.FileName,'GMI_',num2str(hfoFreq(1)),'_',num2str(hfoFreq(2)),'.SubSession.lfp.mat'],'GMI_hfo');
+              % GMI
+              save([basepath filesep sessionInfo.FileName,'GMI.SubSession.lfp.mat'],'GMI');
+              % GMI Tort lg
+              save([basepath filesep sessionInfo.FileName,'GMI_Tort_',num2str(sgFreq(1)),'_',num2str(sgFreq(2)),'.SubSession.lfp.mat'],'MI_lg');
+              % GMI Tort hg
+              save([basepath filesep sessionInfo.FileName,'GMI_Tort_',num2str(hgFreq(1)),'_',num2str(hgFreq(2)),'.SubSession.lfp.mat'],'MI_hg');
+              % GMI Tort hfo
+              save([basepath filesep sessionInfo.FileName,'GMI_Tort_',num2str(hfoFreq(1)),'_',num2str(hfoFreq(2)),'.SubSession.lfp.mat'],'MI_hfo');
+              % GMI Tort 
+              save([basepath filesep sessionInfo.FileName,'GMI_Tort.SubSession.lfp.mat'],'MI');
+          end
+          
+      catch
+          disp('It is not possible to perform lfp_analysis SubSession...')         
+      end      
+  else
+      try
+          disp('Computing lfp_analysis for Whole Session...')
+          session = loadSession;
+          sessionInfo = bz_getSessionInfo(pwd,'noPrompts',true);
+          shanks = sessionInfo.AnatGrps;
+          shanks(excludeShanks) = [];
+          
+         % Pick Channel of Ripples and SW
+          if ~isempty(dir([basepath filesep '*.channelinfo.ripples.mat']))
+             disp('Channelinfo.ripples.mat file detected ! Loading file.')
+             file = dir([basepath filesep '*channelinfo.ripples.mat'])
+             load(file.name);
+          end
+          lfp1 = bz_GetLFP(rippleChannels.Ripple_Channel);
+          lfp2 = bz_GetLFP(rippleChannels.Sharpwave_Channel); 
+          % Compute Coherence between one channel of each shank
+          coherencePerShank = bz_coherencePerShank();
+          % Compute Coherence between two channels
+          bz_MTCoherogram(lfp1,lfp2,'range',[0 200], 'window',1);
+          % Compute Cross-Frequency Coupling
+          lfp = bz_GetLFP('all');
+          CFCPhaseAmp_lg = bz_CFCPhaseAmp(lfp,[thetaFreq(1):1:thetaFreq(2)],[sgFreq(1):1:sgFreq(2)],'phaseCh',rippleChannels.Ripple_Channel,'ampCh',rippleChannels.Ripple_Channel);
+          CFCPhaseAmp_hg = bz_CFCPhaseAmp(lfp,[thetaFreq(1):1:thetaFreq(2)],[hgFreq(1):1:hgFreq(2)],'phaseCh',rippleChannels.Ripple_Channel,'ampCh',rippleChannels.Ripple_Channel);
+          CFCPhaseAmp_hfo = bz_CFCPhaseAmp(lfp,[thetaFreq(1):1:thetaFreq(2)],[hfoFreq(1):1:hfoFreq(2)],'phaseCh',rippleChannels.Ripple_Channel,'ampCh',rippleChannels.Ripple_Channel);
+          CFCPhaseAmp = bz_CFCPhaseAmp(lfp,[thetaFreq(1):1:thetaFreq(2)],[1:1:200],'phaseCh',rippleChannels.Ripple_Channel,'ampCh',rippleChannels.Ripple_Channel);
+
+          PhaseAmpCoupling_lg = bz_PhaseAmpCouplingByAmp(lfp,[thetaFreq(1) thetaFreq(2)], [sgFreq(1) sgFreq(2)],'phaseCh',rippleChannels.Ripple_Channel,'ampCh',rippleChannels.Ripple_Channel);
+          PhaseAmpCoupling_hg = bz_PhaseAmpCouplingByAmp(lfp,[thetaFreq(1) thetaFreq(2)], [hgFreq(1) hgFreq(2)],'phaseCh',rippleChannels.Ripple_Channel,'ampCh',rippleChannels.Ripple_Channel);
+          PhaseAmpCoupling_hfo = bz_PhaseAmpCouplingByAmp(lfp,[thetaFreq(1) thetaFreq(2)], [hfoFreq(1) hfoFreq(2)],'phaseCh',rippleChannels.Ripple_Channel,'ampCh',rippleChannels.Ripple_Channel);                  
+          PhaseAmpCoupling = bz_PhaseAmpCouplingByAmp(lfp,[thetaFreq(1) thetaFreq(2)], [1 200],'phaseCh',rippleChannels.Ripple_Channel,'ampCh',rippleChannels.Ripple_Channel);                  
+          % Power-Power Correlation
+          lfp = bz_GetLFP([rippleChannels.Ripple_Channel rippleChannels.Sharpwave_Channel]);
+          comodulogram = bz_Comodulogram(lfp,[],[],'ch1',rippleChannels.Ripple_Channel, 'ch2',rippleChannels.Sharpwave_Channel);
+                  
+
+          % GMI Index
+          % Maybe we can compute this index over a wide range of
+          % channels (as an input)
+          lfp = bz_GetLFP('all');
+          GMI_lg = bz_GMI(lfp,[thetaFreq(1) thetaFreq(2)], [sgFreq(1) sgFreq(2)],'phaseCh',sessionInfo.channels,'ampCh',sessionInfo.channels);
+%                   bz_GMI(lfp,[4 12], [30 80],'phaseCh',rippleChannels.Ripple_Channel,'ampCh',rippleChannels.Ripple_Channel,'foldername',foldername);
+          GMI_hg = bz_GMI(lfp,[thetaFreq(1) thetaFreq(2)], [hgFreq(1) hgFreq(2)],'phaseCh',sessionInfo.channels,'ampCh',sessionInfo.channels);
+%                   bz_GMI(lfp,[4 12], [80 150],'phaseCh',rippleChannels.Ripple_Channel,'ampCh',rippleChannels.Ripple_Channel,'foldername',foldername);
+          GMI_hfo = bz_GMI(lfp,[thetaFreq(1) thetaFreq(2)],[hfoFreq(1) hfoFreq(2)],'phaseCh',sessionInfo.channels,'ampCh',sessionInfo.channels);
+          GMI = bz_GMI(lfp,[thetaFreq(1) thetaFreq(2)], [1 200],'phaseCh',sessionInfo.channels,'ampCh',sessionInfo.channels);
+%                   bz_GMI(lfp,[4 12], [1 200],'phaseCh',rippleChannels.Ripple_Channel,'ampCh',rippleChannels.Ripple_Channel,'foldername',foldername);
+
+          % GMI Index Tort
+          % Maybe we can compute this index over a wide range of
+          % channels (as an input)
+          lfp = bz_GetLFP('all');
+          MI_lg = bz_GMITort(lfp,[thetaFreq(1) thetaFreq(2)], [sgFreq(1) sgFreq(2)], 'phaseCh',sessionInfo.channels,'ampCh',sessionInfo.channels);
+          MI_hg = bz_GMITort(lfp,[thetaFreq(1) thetaFreq(2)],[hgFreq(1) hgFreq(2)], 'phaseCh',sessionInfo.channels,'ampCh',sessionInfo.channels);
+          MI_hfo = bz_GMITort(lfp,[thetaFreq(1) thetaFreq(2)],[hfoFreq(1) hfoFreq(2)], 'phaseCh',sessionInfo.channels,'ampCh',sessionInfo.channels);
+          MI = bz_GMITort(lfp,[thetaFreq(1) thetaFreq(2)], [1 200], 'phaseCh',sessionInfo.channels,'ampCh',sessionInfo.channels);    
+      catch
+          disp('It is not possible to run lfp_analysis for Whole Session..')
+      end  
+  end    
+end
+
+%% 9 - CREATION EXCEL FILE 
+
+if any(ismember(listOfAnalysis,'excel'))
+    if analyzeSubSessions
+        try
+            disp('Creating Excel file for SubSessions ...')
+            excel = bz_createExcelUbSessions('basepath',basepath,'diffLFPs',diffLFPs,'thetaFreq',thetaFreq,'sgFreq',sgFreq,'hgFreq',hgFreq);
+        catch
+            warning('It has not been possible to create Excel file for SubSession...')
+        end
+    else
+        try
+            disp('Creating Excel file...')
+            excel = bz_createExcel('basepath',basepath,'diffLFPs',diffLFPs,'thetaFreq',thetaFreq,'sgFreq',sgFreq,'hgFreq',hgFreq);
+        catch
+            warning('It has not been possible to create Excel file...')
+        end
+    end
+end
+%% 10 - PLOT PLACE FIELDS
 try
-    
-    plot_placeFields(firingMaps,spikes,tracking);
+    disp('Plotting Place Fields')
+    plot_placeFields(firingMaps,spikes,tracking,cell_metrics);
 catch
-    
     disp('It is not possible to run plot Place Fields')
 end
 

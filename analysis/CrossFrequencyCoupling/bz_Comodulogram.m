@@ -1,4 +1,4 @@
-function [ comod ] = bz_Comodulogram(lfp,specparms,figparms)
+function [ comod ] = bz_Comodulogram(lfp,specparms,figparms,varargin)
 %[ comod ] = bz_Comodulogram(lfp,specparms,figparms) calculates the
 %comodulogram (i.e. power-power correlation) for an lfp file.
 %
@@ -48,15 +48,27 @@ addParameter(parms,'ncyc',5,@isnumeric);
 addParameter(parms,'space','log');
 addParameter(parms,'samplingRate',[]);
 addParameter(parms,'showprogress',false,@islogical);
-addParameter(parms,'saveMat',false);
 addParameter(parms,'fvector',[]);
 addParameter(parms,'specnorm','log');
 addParameter(parms,'type','wavelet');
 addParameter(parms,'winsize',1,@isnumeric);
 addParameter(parms,'overlap',0.5,@isnumeric);
+addParameter(parms,'basepath',pwd,@isdir);
+addParameter(parms,'saveFig',true,@islogical);
+addParameter(parms,'saveMat',true,@islogical);
+addParameter(parms,'foldername',[],@isstr);
+addParameter(parms,'exist_file',false,@islogical);
+% Fig params
+addParameter(parms,'figfolder','lfpAnalysisFigures',@isstr);
+addParameter(parms,'basename',pwd,@isdir);
+% Channel info
+addParameter(parms,'ch1',[],@isnumeric);
+addParameter(parms,'ch2',[],@isnumeric);
 
 
-parse(parms,specparms)
+
+% parse(parms,specparms)
+parse(parms,varargin{:})
 specparms.frange = parms.Results.frange;
 specparms.nfreqs = parms.Results.nfreqs;
 specparms.ncyc = parms.Results.ncyc;
@@ -69,6 +81,27 @@ specparms.specnorm = parms.Results.specnorm;
 specparms.type = parms.Results.type;
 specparms.winsize = parms.Results.winsize;
 specparms.overlap = parms.Results.overlap;
+basepath = parms.Results.basepath;
+saveFig = parms.Results.saveFig;
+saveMat = parms.Results.saveMat;
+foldername = parms.Results.foldername;
+exist_file = parms.Results.exist_file;
+
+if exist(foldername)
+    figparms.plotname = foldername;
+    figparms.baseName = foldername;
+else
+    figparms.plotname = [];
+    figparms.baseName = basepath;
+end
+figparms.figfolder = parms.Results.figfolder;
+
+% Channel Info
+ch1 = parms.Results.ch1;
+ch2 = parms.Results.ch2;
+
+% Load sessionInfo
+sessionInfo = bz_getSessionInfo(basepath);
 
 %lfp input
 if isstruct(lfp)
@@ -171,7 +204,7 @@ if isempty(refCh)
        for i = 1:2
            spec{i} = log10(abs(spec{i})); %Log-transform power
        end
-       comod.corrs = corr(spec{1}',spec{2}','type','spearman');   
+       comod.corrs = corr(spec{1}',spec{2}','type','spearman');
     end
 elseif exist('refCh')
     specRef = log10(abs(specRef)); %Log-transform power
@@ -201,7 +234,30 @@ colormap(corrcolor)
     LogScale('xy',2)
     xlabel('f (Hz)');ylabel('f (Hz)')
     
-NiceSave(['Comodulogram',figparms.plotname],figparms.figfolder,figparms.baseName)
+% NiceSave(['Comodulogram ',figparms.plotname],figparms.figfolder,figparms.baseName)
 
+saveas(gcf,[figparms.figfolder filesep 'Comodulogram ', figparms.plotname, '.png'])
+
+end
+
+if saveMat
+    comod.ch1 = ch1;
+    comod.ch2 = ch2;
+    
+    if ~isempty(foldername)
+            try
+                save([basepath filesep sessionInfo.FileName,'.',foldername,'.Comodulogram','_',num2str(sig2band(1)),num2str(sig2band(end)),'.lfp.mat'],'comod')
+            catch
+                save([basepath filesep sessionInfo.FileName,'.',foldername,'.Comodulogram','_',num2str(sig2band(1)),num2str(sig2band(end)),'.lfp.mat'],'comod','-v7.3')
+            end
+        else
+            try
+                save([basepath filesep sessionInfo.FileName,'.','Comodulogram','_',num2str(sig2band(1)),num2str(sig2band(end)),'.lfp.mat'],'comod')
+            catch
+                save([basepath filesep sessionInfo.FileName,'.','Comodulogram','_',num2str(sig2band(1)),num2str(sig2band(end)),'.lfp.mat'],'comod')
+            end
+    end
+end
+    
 end
 

@@ -592,8 +592,7 @@ if analyzeSubSessions
             
     catch
         warning('It has not been possible to run Spike Train Analysis for SubSessions...')      
-    end
-        
+    end        
 else
     try
         disp('Computing Spike Train Analysis for Whole Session..')

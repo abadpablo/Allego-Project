@@ -103,7 +103,7 @@ bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'diffLFPs',true,'a
 %%
 bpath = 'G:\HPS23\HPS23_040621_sess1';
 bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[]);
-bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'diffLFPs',true,'analyzeSubSessions',false,'exclude',{'spikes','ripples','thetaModulation','performance','spikeTrain','excel'});
+bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'diffLFPs',true,'analyzeSubSessions',false,'exclude',{'spikes','ripples','thetaModulation','behaviour','performance','spikeTrain','excel','CellExplorer'});
 
 
 bpath = 'F:\data\HPS23\HPS23_300421_sess4';
@@ -116,3 +116,9 @@ bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[]);
 
 bpath = 'F:\data\HPS23\HPS23_030621_sess14';
 bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[]);
+
+
+%% HPS23 090621 Prueba para SubSessions
+bpath = 'G:\HPS23\HPS23_090621_sess9';
+bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'diffLFPS',true,'analyzeSubSessions',true,'exclude',{'spikes','ripples'});
+

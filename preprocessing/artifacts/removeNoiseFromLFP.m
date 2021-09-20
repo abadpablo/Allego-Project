@@ -19,7 +19,7 @@ function removeNoiseFromLFP(basepath,varargin)
 p = inputParser;
 addParameter(p,'basepath',pwd,@isdir);
 addParameter(p,'ch','all');
-addParameter(p,'method','substractMedian',@ischar);
+addParameter(p,'method','substractMean',@ischar);
 addParameter(p,'keepDat',false,@islogical);
 
 warning('Performing median/mean substraction!! Dat file will be compromised!! ');
@@ -48,13 +48,17 @@ if ischar(ch) && strcmpi(ch, 'all')
     ch = 1:length(xml.channels);
 end
 nChannels = xml.nChannels;
-filename = split(basepath,filesep);
-filename = filename{end};
-
-load([filename,'.session.mat']);
-duration = 60;
-% duration = session.general.duration;
+session = loadSession();
+% duration = 60;
+duration = session.general.duration;
 frequency = xml.rates.wideband;
+
+fid = fopen(fileTargetAmplifier.name,'r'); 
+filename = fileTargetAmplifier.name;
+C = strsplit(fileTargetAmplifier.name,'.dat'); 
+filenameOut = [C{1} '_temp.dat'];
+fidOutput = fopen(filenameOut,'a');
+
 lfp = bz_GetLFP('all');
 data = lfp.data';
 
@@ -66,6 +70,7 @@ end
 
 
 while 1    
+    data = fread(fid,[nChannels frequency*duration], 'int16');
     if isempty(data)
         break;
     end
@@ -79,16 +84,17 @@ while 1
     for ii = 1:length(ch)
         data_aux(ch(ii),:) = int16(double(data(ch(ii),:)) - double(m_data));
     end
-%     fwrite(fidOutput,data,'int16');
+    fwrite(fidOutput,data,'int16');
+    
 end
-% fclose(fid);
-% fclose(fidOutput);
+fclose(fid);
+fclose(fidOutput);
 
-% if ~keepDat
-%     copyfile(filename, [C{1} '_original.dat']);
-% end
-% delete(filename);
-% movefile(filenameOut, filename);
+if ~keepDat
+    copyfile(filename, [C{1} '_original.dat']);
+end
+delete(filename);
+movefile(filenameOut, filename);
 
 cd(prevPath);
 

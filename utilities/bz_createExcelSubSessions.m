@@ -1,4 +1,4 @@
-function [excel] = bz_createExcel(varargin)
+function [excel] = bz_createExcelSubSessions(varargin)
 %
 % Creates excel file with the properties indicated in inputs (analyseSubSessions, spikes, ripples, theta-gamma, spikeTrain) 
 %
@@ -59,7 +59,7 @@ addParameter(p,'hgFreq',[],@isnumeric);
 
 % LFP
 addParameter(p,'phaseFreq',[4 12], @isnumeric);
-addParameter(p,'ampFreq',[30 80; 80 150; 150 200; 1 200], @isnumeric);
+% addParameter(p,'ampFreq',[30 80; 80 150; 150 200; 1 200], @isnumeric);
 addParameter(p,'CFCPhaseAmp',[],@isstruct);
 addParameter(p,'coherence_Shanks',[],@isstruct);
 addParameter(p,'coherogram',[],@isstruct);
@@ -95,9 +95,10 @@ powerProfile_hg = p.Results.powerProfile_hg;
 thetaFreq = p.Results.thetaFreq;
 sgFreq = p.Results.sgFreq;
 hgFreq = p.Results.hgFreq;
+
 % LFP
 phaseFreq = p.Results.phaseFreq;
-ampFreq = p.Results.ampFreq;
+% ampFreq = p.Results.ampFreq;
 CFCPhaseAmp = p.Results.CFCPhaseAmp;
 coherence_Shanks = p.Results.coherence_Shanks;
 coherogram = p.Results.coherogram;
@@ -105,6 +106,8 @@ GMI = p.Results.GMI;
 PhaseAmpCouplingByAmp = p.Results.PhaseAmpCouplingByAmp;
 MI = p.Results.MI;
 
+
+ampFreq = [thetaFreq; sgFreq; hgFreq; hfoFreq];
 
 %% In case Excel already exists 
 if ~isempty(dir([basepath filesep '*Excel.mat'])) || forceReload
@@ -133,30 +136,30 @@ end
 %% 2 - RIPPLES
 
 if isempty(ripples)
-    if ~isempty(dir([basepath filesep '*ripples.events.mat']))
-        disp('Loading Ripples...')
-        file = dir([basepath filesep '*ripples.events.mat']);
+    if ~isempty(dir([basepath filesep '*ripples.SubSession.events.mat']))
+        disp('Loading Ripples for SubSessions ...')
+        file = dir([basepath filesep '*ripples.SubSession.events.mat']);
         load(file.name)
     else
-        warning('It is not possible to load Ripples...')
+        warning('It is not possible to load Ripples SubSessions ...')
     end
 end 
 
 if isempty(rippleChannels)
-    if ~isempty(dir([basepath filesep '*.channelInfo.ripples.mat']))
-        disp('Loading rippleChannels...')
-        file = dir([basepath filesep '*channelInfo.ripples.mat']);
+    if ~isempty(dir([basepath filesep '*.channelInfo.SubSession.ripples.mat']))
+        disp('Loading rippleChannels for SubSessions ...')
+        file = dir([basepath filesep '*channelInfo.SubSession.ripples.mat']);
         load(file.name)
     else
-        warning('It is not possible to load rippleChannel...');
+        warning('It is not possible to load rippleChannel SubSessions...');
     end
 end
-    
+
 %% 3 - POWER PROFILE
 if isempty(powerProfile_theta)
-    if ~isempty(dir([basepath filesep '*PowerSpectrumProfile_',num2str(thetaFreq(1)),'_',num2str(thetaFreq(2)),'.channelinfo.mat']))
-        disp('Loading Power Profile Theta...')
-        file = dir([basepath filesep '*PowerSpectrumProfile_',num2str(thetaFreq(1)),'_',num2str(thetaFreq(2)),'.channelInfo.mat'])
+    if ~isempty(dir([basepath filesep '*PowerSpectrumProfile_',num2str(thetaFreq(1)),'_',num2str(thetaFreq(2)),'.SubSession.channelinfo.mat']))
+        disp('Loading Power Profile Theta for SubSessions...')
+        file = dir([basepath filesep '*PowerSpectrumProfile_',num2str(thetaFreq(1)),'_',num2str(thetaFreq(2)),'.SubSession.channelInfo.mat'])
         for i=1:length(file)
             powerProfile_theta{i} = load(file(i).name);
         end
@@ -164,9 +167,9 @@ if isempty(powerProfile_theta)
 end
     
 if isempty(powerProfile_sg)
-    if ~isempty(dir([basepath filesep '*PowerSpectrumProfile_',num2str(sgFreq(1)),'_',num2str(sgFreq(2)),'.channelinfo.mat']))
-        disp('Loading Power Profile Slow Gamma...')
-        file = dir([basepath filesep '*PowerSpectrumProfile_',num2str(sgFreq(1)),'_',num2str(sgFreq(2)),'.channelinfo.mat'])
+    if ~isempty(dir([basepath filesep '*PowerSpectrumProfile_',num2str(sgFreq(1)),'_',num2str(sgFreq(2)),'.SubSession.channelinfo.mat']))
+        disp('Loading Power Profile Slow Gamma for SubSessions ...')
+        file = dir([basepath filesep '*PowerSpectrumProfile_',num2str(sgFreq(1)),'_',num2str(sgFreq(2)),'.SubSession.channelinfo.mat'])
         for i=1:length(file)
             powerProfile_sg{i} = load(file(i).name);
         end
@@ -174,26 +177,25 @@ if isempty(powerProfile_sg)
 end
     
 if isempty(powerProfile_hg)
-    if ~isempty(dir([basepath filesep '*PowerSpectrumProfile_',num2str(hgFreq(1)),'_',num2str(hgFreq(2)),'.channelinfo.mat']))
-        disp('Loading Power Profile High Gamma ...')
-        file = dir([basepath filesep '*PowerSpectrumProfile_',num2str(hgFreq(1)),'_',num2str(hgFreq(2)),'.channelinfo.mat'])
+    if ~isempty(dir([basepath filesep '*PowerSpectrumProfile_',num2str(hgFreq(1)),'_',num2str(hgFreq(2)),'.SubSession.channelinfo.mat']))
+        disp('Loading Power Profile High Gamma for SubSessions ...')
+        file = dir([basepath filesep '*PowerSpectrumProfile_',num2str(hgFreq(1)),'_',num2str(hgFreq(2)),'.SubSession.channelinfo.mat'])
         for i=1:length(file)
-            powerProfile_hfo{i} = load(file(i).name);
+            powerProfile_hg{i} = load(file(i).name);
         end
     end
 end
-
+     
 %% 3 - PHASELOCKING THETA-GAMMA
-
-if ~isempty(dir([basepath filesep '*PhaseLockingData.cellinfo.mat']))
-    disp('Loading Phase Locking Theta...')
-    file = dir([basepath filesep '*PhaseLockingData.cellinfo.mat'])
+if ~isempty(dir([basepath filesep '*PhaseLockingData.SubSession.cellinfo.mat']))
+    disp('Loading SubSession Phase Locking Theta...')
+    file = dir([basepath filesep '*PhaseLockingData.SubSession.cellinfo.mat'])
     load(file.name)
 end
 
-if ~isempty(dir([basepath filesep '*PhaseLockingData_sg.cellinfo.mat']))
-    disp('Loading Phase Locking Slow Gamma...')
-    file = dir([basepath filesep '*PhaseLockingData_sg.cellinfo.mat'])
+if ~isempty(dir([basepath filesep '*PhaseLockingData_sg.SubSession.cellinfo.mat']))
+    disp('Loading SubSession Phase Locking Slow Gamma...')
+    file = dir([basepath filesep '*PhaseLockingData_sg.SubSession.cellinfo.mat'])
     load(file.name) 
 end
 
@@ -220,33 +222,34 @@ end
 %% 5 - LOAD PERFORMANCE
 if isempty(performance)
     try
-        performance = getSessionPerformance('tracking',tracking);    
+        performance = getSessionPerformance('tracking',tracking); 
     catch     
         warning('It is not possible to load Performance...');
-        performance = [];      
+        performance = [];
     end
 end
 
 %% 6 - SPIKETRAIN
 if isempty(spikeTrain)
-    spikeTrain = bz_SpikeTrain(spikes);
+    spikeTrain = bz_SpikeTrain(spikes,'analyzeSubSessions',true);
 end 
 
 %% LOAD ALL LFP VARIABLES
+
 % Coherence_Shanks
 if isempty(coherence_Shanks)
-   if ~isempty(dir([basepath filesep sessionInfo.FileName '.Coherence_Shanks.lfp.mat']))
-       disp('Coherence_Shanks.lfp.mat already detected. Loading file !');
-       file = dir([basepath filesep sessionInfo.FileName '.Coherence_Shanks.lfp.mat']);
+   if ~isempty(dir([basepath filesep sessionInfo.FileName '.Coherence_Shanks.SubSession.lfp.mat']))
+       disp('Coherence_Shanks.SubSession.lfp.mat already detected. Loading file !');
+       file = dir([basepath filesep sessionInfo.FileName '.Coherence_Shanks.SubSession.lfp.mat']);
        load(file.name);
    end   
 end
 
 % Coherogram
 if isempty(coherogram)
-    if ~isempty(dir([basepath filesep sessionInfo.FileName '.Coherogram.lfp.mat']))
-        disp('Coherogram.lfp.mat already detected. Loading file !');
-        file = dir([basepath filesep sessionInfo.FileName '.Coherogram.lfp.mat']);
+    if ~isempty(dir([basepath filesep sessionInfo.FileName '.Coherogram.SubSession.lfp.mat']))
+        disp('Coherogram.SubSession.lfp.mat already detected. Loading file !');
+        file = dir([basepath filesep sessionInfo.FileName '.Coherogram.SubSession.lfp.mat']);
         load(file.name);
     end
 end
@@ -254,9 +257,9 @@ end
 % CFCPhaseAmp
 if isempty(CFCPhaseAmp)
     for i=1:size(ampFreq,1)
-        if ~isempty(dir([basepath filesep sessionInfo.FileName '.CFCPhaseAmp_',num2str(ampFreq(i,1)),num2str(ampFreq(i,end)),'.lfp.mat']))
-            disp(['CFCPhaseAmp_',num2str(ampFreq(i,1)),num2str(ampFreq(i,end)),'Hz.lfp.mat already detected !. Loading file...' ]);
-            file = dir([basepath filesep sessionInfo.FileName '.CFCPhaseAmp_',num2str(ampFreq(i,1)),num2str(ampFreq(i,end)),'.lfp.mat']);
+        if ~isempty(dir([basepath filesep sessionInfo.FileName '.CFCPhaseAmp_',num2str(ampFreq(i,1)),num2str(ampFreq(i,end)),'.SubSession.lfp.mat']))
+            disp(['CFCPhaseAmp_',num2str(ampFreq(i,1)),num2str(ampFreq(i,end)),'.SubSession.lfp.mat already detected !. Loading file...' ]);
+            file = dir([basepath filesep sessionInfo.FileName '.CFCPhaseAmp_',num2str(ampFreq(i,1)),num2str(ampFreq(i,end)),'.SubSession.lfp.mat']);
             CFCPhaseAmp{i} = load(file.name);
             CFCPhaseAmp{i}.ampFreq = ampFreq(i,:);
         end       
@@ -266,64 +269,41 @@ end
 % PhaseAmpCouplingByAmp
 if isempty(PhaseAmpCouplingByAmp)
     for i=1:size(ampFreq,1)
-        if ~isempty(dir([basepath filesep sessionInfo.FileName '.PhaseAmpCouplingbyAmp_',num2str(ampFreq(i,1)),num2str(ampFreq(i,end)),'.lfp.mat']))
-            disp(['PhaseAmpCouplingByAmp',num2str(ampFreq(i,1)),num2str(ampFreq(i,end)),'lfp.mat already detected! Loading file...']);
-            file = dir([basepath filesep sessionInfo.FileName '.PhaseAmpCouplingByAmp_',num2str(ampFreq(i,1)),num2str(ampFreq(i,end)),'.lfp.mat']);
+        if ~isempty(dir([basepath filesep sessionInfo.FileName '.PhaseAmpCouplingbyAmp_',num2str(ampFreq(i,1)),num2str(ampFreq(i,end)),'.SubSession.lfp.mat']))
+            disp(['PhaseAmpCouplingByAmp',num2str(ampFreq(i,1)),num2str(ampFreq(i,end)),'.SubSession.lfp.mat already detected! Loading file...']);
+            file = dir([basepath filesep sessionInfo.FileName '.PhaseAmpCouplingByAmp_',num2str(ampFreq(i,1)),num2str(ampFreq(i,end)),'.SubSession.lfp.mat']);
             PhaseAmpCouplingByAmp{i} = load(file.name);           
         end           
     end
 end
 
-
 % GMI
 if isempty(GMI)
     for i=1:size(ampFreq,1)
-        if ~isempty(dir([basepath filesep sessionInfo.FileName '.GMI_',num2str(ampFreq(i,1)),num2str(ampFreq(i,end)),'.lfp.mat']))
-            disp(['GMI_',num2str(ampFreq(i,1)),num2str(ampFreq(i,end)),'Hz.lfp.mat already detected !. Loading file...' ]);
-            file = dir([basepath filesep sessionInfo.FileName '.GMI_',num2str(ampFreq(i,1)),num2str(ampFreq(i,end)),'.lfp.mat']);
+        if ~isempty(dir([basepath filesep sessionInfo.FileName '.GMI_',num2str(ampFreq(i,1)),num2str(ampFreq(i,end)),'.SubSession.lfp.mat']))
+            disp(['GMI_',num2str(ampFreq(i,1)),num2str(ampFreq(i,end)),'.SubSession.lfp.mat already detected !. Loading file...' ]);
+            file = dir([basepath filesep sessionInfo.FileName '.GMI_',num2str(ampFreq(i,1)),num2str(ampFreq(i,end)),'.SubSession.lfp.mat']);
             GMI{i} = load(file.name);
             GMI{i}.ampFreq = ampFreq(i,:);          
         end            
     end  
 end
 
-
 % MI
 if isempty(MI)
     for i=1:size(ampFreq,1)
-        if ~isempty(dir([basepath filesep sessionInfo.FileName '.GMI_Tort_',num2str(ampFreq(i,1)),num2str(ampFreq(i,end)),'lfp.mat']))
-            disp(['Mi Tort_', num2str(ampFreq(i,1)),num2str(ampFreq(i,end)),'.lfp.mat already detected! Loading file...']);
-            file = dir([basepath filesep sessionInfo.FileName '.GMI_Tort_',num2str(ampFreq(i,1)),num2str(ampFreq(i,end)),'.lfp.mat']);
+        if ~isempty(dir([basepath filesep sessionInfo.FileName '.GMI_Tort_',num2str(ampFreq(i,1)),num2str(ampFreq(i,end)),'.SubSession.lfp.mat']))
+            disp(['MI Tort_', num2str(ampFreq(i,1)),num2str(ampFreq(i,end)),'.SubSession.lfp.mat already detected! Loading file...']);
+            file = dir([basepath filesep sessionInfo.FileName '.GMI_Tort_',num2str(ampFreq(i,1)),num2str(ampFreq(i,end)),'.SubSession.lfp.mat']);
             MI{i} = load(file.name);
         end       
     end    
 end
 
-
 %% EXTRACT THE VARIABLES RELATED TO POWER SPECTRUM AND COHERENCE
 
 coherence_Shanks_mean = bz_extractFrequencyBands(coherence_Shanks,'variable','coherence_Shanks');
-
 coherogram_mean = bz_extractFrequencyBands(coherogram,'variable','coherogram');
-
-
-
-
-
-    
-
-
-
-
-
-
-
-        
-
-    
-
-    
-
 
 %% ===================================================================================
 % --------------- CREATING EXCEL VARIABLES  ----------------------------------
@@ -333,18 +313,19 @@ coherogram_mean = bz_extractFrequencyBands(coherogram,'variable','coherogram');
 sheet_spikes = 'spikes';
 Header_spikes = {'foldername' 'shankID' 'ch' 'totalSpikes' 'amplitude' }
 
+
 for j=1:spikes.numcells
     Output_spikes{j} = {spikes.basename spikes.shankID(j) spikes.maxWaveformCh(j) spikes.total(j) mean(spikes.amplitudes{j})};
 end
 
 %% RIPPLES
+
 sheet_ripples = 'ripples';
 Header_ripples = {'foldername' 'rippleChannel' 'SharpWaveChannel' 'NoiseChannel' 'numRipples' 'peakFrequency' 'peakAmplitude' 'duration' };
 
 for i=1:length(ripples)
-    Output_ripples{i} = {ripples{i}.foldername rippleChannels{i}.Ripple_Channel rippleChannels{i}.SharpWave_Channel rippleChannels{i}.Noise_Channel size(ripples{i}.timestamps,1) mean(ripples{i}.data.peakFrequency) mean(ripples{i}.data.peakAmplitude) mean(ripples{i}.data.duration)};
+    Output_ripples{i} = {ripples{i}.foldername rippleChannels{i}.Ripple_Channel rippleChannels{i}.Sharpwave_Channel rippleChannels{i}.Noise_Channel size(ripples{i}.timestamps,1) mean(ripples{i}.data.peakFrequency) mean(ripples{i}.data.peakAmplitude) mean(ripples{i}.data.duration)};
 end
-
 
 %% LFP
 
@@ -413,6 +394,7 @@ end
 
 % MI
 shanks = sessionInfo.AnatGrps;
+
 
 %% FIRING MAPS
 
@@ -510,22 +492,22 @@ for i=1:length(powerProfile_sg)
     end 
 end
 
-%% POWER SPECTRUM PROFILE HIGH FREQUENCY OSCILLATIONS
-sheet_powerProfile_hfo = 'powerProfile_hfo';
-Header_powerProfile_hfo = {'folder' 'ch' 'shankID' 'mean' 'std' 'ic95' 'median'};
+%% POWER SPECTRUM PROFILE HIGH GAMMA
+sheet_powerProfile_hg = 'powerProfile_hg';
+Header_powerProfile_hg = {'folder' 'ch' 'shankID' 'mean' 'std' 'ic95' 'median'};
 
-for i=1:length(powerProfile_hfo)
+for i=1:length(powerProfile_hg)
     for j=1:sessionInfo.nChannels
-        Output_powerProfile_hfo{i}{j} = {MergePoints.foldernames{i} powerProfile_hfo{i}.powerProfile.channels(j)+1 shank_ch(j) powerProfile_hfo{i}.powerProfile.mean(j) powerProfile_hfo{i}.powerProfile.std(j)...
-                                            powerProfile_hfo{i}.powerProfile.ic95(j) powerProfile_hfo{i}.powerProfile.median(j)};
+        Output_powerProfile_hg{i}{j} = {MergePoints.foldernames{i} powerProfile_hg{i}.powerProfile.channels(j)+1 shank_ch(j) powerProfile_hg{i}.powerProfile.mean(j) powerProfile_hg{i}.powerProfile.std(j)...
+                                            powerProfile_hg{i}.powerProfile.ic95(j) powerProfile_hg{i}.powerProfile.median(j)};
     end 
 end
-
 
 
 %% ====================================================================================
 %% -------- WRITING EXCEL FILE ----------------------------------------
 % =====================================================================================
+%% WRITING EXCEL FILE
 
 NoFile = isfile([pathExcel,'\',nameExcel]);
 
@@ -533,10 +515,10 @@ cd(pathExcel)
 if ~NoFile
     % Sheet Spikes
     xlswrite([nameExcel], Header_spikes, [sheet_spikes], ['A',num2str(1),':','E',num2str(1)])
+    % Sheet Ripples
+    xlswrite([nameExcel], Header_ripples, [sheet_ripples],['A',num2str(1),':','H',num2str(1)])
     % Sheet FiringMaps
     xlswrite([nameExcel], Header_firingMaps, [sheet_firingMaps], ['A',num2str(1),':','AF',num2str(1)])
-    % Sheet Ripples
-    xlswrite([nameExcel], Header_ripples, [sheet_ripples],['A',num2str(1),':','E',num2str(1)])
     % Sheet spikeTrain
     xlswrite([nameExcel], Header_spikeTrain,[sheet_spikeTrain],['A',num2str(1),':','AF',num2str(1)])
     % Sheet Performance
@@ -550,9 +532,7 @@ if ~NoFile
     % Sheet powerProfile_sg
     xlswrite([nameExcel], Header_powerProfile_sg, [sheet_powerProfile_sg], ['A',num2str(1),':','G',num2str(1)])
     % Sheet powerProfile_hfo
-    xlswrite([nameExcel], Header_powerProfile_hfo, [sheet_powerProfile_hfo], ['A',num2str(1),':','G',num2str(1)])
-    
-    
+    xlswrite([nameExcel], Header_powerProfile_hg, [sheet_powerProfile_hg], ['A',num2str(1),':','G',num2str(1)]) 
 end
 
 % SPIKES
@@ -566,6 +546,21 @@ for i=1:length(Output_spikes)
         lineToWrite = line+2;
     end
     xlswrite([nameExcel], Output_spikes{i}, [sheet_spikes], ['A',num2str(lineToWrite),':','E',num2str(lineToWrite)]);
+end
+
+% RIPPLE
+for i=1:length(Output_ripples)
+    file_excel = openExcel(nameExcel,sheet_ripples);
+    length_fileExcel = numel(fieldnames((file_excel))); % length == 1 means that there is only Header in xls file
+
+    if length_fileExcel == 1
+        lineToWrite = 2;
+    else
+        line = size(file_excel.data(:,:),1);
+        lineToWrite = line+2;
+    end
+
+    xlswrite([nameExcel], Output_ripples{i},[sheet_ripples], ['A',num2str(lineToWrite),':','H',num2str(lineToWrite)]);
 end
 
 % FIRINGMAPS
@@ -584,20 +579,7 @@ for i=1:length(Output_firingMaps)
     
 end
 
-% RIPPLE
-for i=1:length(Output_ripples)
-    file_excel = openExcel(nameExcel,sheet_ripples);
-    length_fileExcel = numel(fieldnames((file_excel))); % length == 1 means that there is only Header in xls file
 
-    if length_fileExcel == 1
-        lineToWrite = 2;
-    else
-        line = size(file_excel.data(:,:),1);
-        lineToWrite = line+2;
-    end
-
-    xlswrite([nameExcel], Output_ripples{i},[sheet_ripples], ['A',num2str(lineToWrite),':','E',num2str(lineToWrite)]);
-end
 
 % SPIKETRAIN
 for i=1:length(Output_spikeTrain)
@@ -711,3 +693,5 @@ if saveMat
 end
 
 end
+
+

@@ -39,7 +39,7 @@ function  bz_PreprocessSession(varargin)
 
 %% Defaults and Parms
 p = inputParser;
-addParameter(p,'basepath',pwd,@isdir); % by default, current folder
+addParameter(p,'basepath',pwd,@isfolder); % by default, current folder
 addParameter(p,'analogCh',[],@isnumeric);
 addParameter(p,'stateScore',true,@islogical);
 addParameter(p,'spikeSort',true,@islogical);
@@ -171,8 +171,9 @@ end
 %% Make LFP
 if isempty(dir('*.lfp'))
     try 
-        bz_LFPfromDat(pwd,'outFs',1250); % generating lfp, NOTE: THIS FUNCTION WILL GENERATE A SESSIONINFO FILE!! WE NEED TO FIX THIS
         disp('Making LFP file ...');
+        bz_LFPfromDat(pwd,'outFs',1250,'useGPU',false); % generating lfp, NOTE: THIS FUNCTION WILL GENERATE A SESSIONINFO FILE!! WE NEED TO FIX THIS
+        
     catch
         disp('Problems with bz_LFPfromDat, resampling...');
 %         sessionFile = dir('*session.mat*');
@@ -187,7 +188,7 @@ end
 %% MEDIAN SUBS
 if islogical(medianSubstr) && medianSubstr
 %     removeNoiseFromDat(pwd);
-    removeNoiseFromLFP(pwd);
+    removeNoiseFromLFP(pwd,'keepDat',true);
 elseif medianSubstr
     removeNoiseFromDat(pwd,'ch',medianSubstr);
 end

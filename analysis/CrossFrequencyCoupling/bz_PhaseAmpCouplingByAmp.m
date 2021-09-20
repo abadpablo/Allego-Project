@@ -18,7 +18,7 @@ function [comod ] = bz_PhaseAmpCouplingByAmp(lfp,sig1band,sig2band,varargin)
 %     Properties    Values
 %    -------------------------------------------------------------------------
 %     phaseCh      channel to compute phase. If empty takes first channel
-%     ampChans     channels to compute amplitude. If empty takes first channel
+%     ampCh     channels to compute amplitude. If empty takes first channel
 %     method       ['hilbert'(default)|'wavelet']. Method to extract power
 %        of both signals, using wavelet or hilbert (default)
 %     
@@ -68,6 +68,12 @@ addParameter(p,'phaseNumBins',50,@isnumeric);
 addParameter(p,'intervals',[0 inf],@isnumeric);
 addParameter(p,'makePlot',true,@islogical);
 addParameter(p,'method','hilbert',@ischar);
+addParameter(p,'basepath',pwd,@isdir);
+addParameter(p,'saveFig',true,@islogical);
+addParameter(p,'saveMat',true,@islogical);
+addParameter(p,'foldername',[],@isstr);
+addParameter(p,'exist_file',false,@islogical);
+
 
 parse(p,varargin{:});
 ampCh = p.Results.ampCh;
@@ -79,108 +85,231 @@ ampNumBins = p.Results.ampNumBins;
 phaseNumBins = p.Results.phaseNumBins;
 intervals = p.Results.intervals;
 method = p.Results.method;
+basepath = p.Results.basepath;
+saveFig = p.Results.saveFig;
+saveMat = p.Results.saveMat;
+foldername = p.Results.foldername;
+exist_file = p.Results.exist_file;
 
+% Load sessionInfo
+sessionInfo = bz_getSessionInfo(basepath);
 
-%%
-phasebins = linspace(-pi,pi,phaseNumBins+1);
-phasebins=phasebins(1:end-1)+diff(phasebins(1:2));
-ampbins = linspace(-2.5,2.5,ampNumBins);
-% ampNumBins = length(ampbins);
-
-%%
-sig1 = bz_Filter(lfp,'passband',sig1band,'filter',filterType,'order',filterOrder,'channels',phaseCh);
-sig1phase = sig1.phase;
-switch method
-    case 'wavelet'
-        sig1 = bz_Wavelet(lfp,'frange',sig1band,'nfreqs',1,'chanID',phaseCh);
-        sig1amp = abs(sig1.data);
-
-        sig2 = bz_Wavelet(lfp,'frange',sig1band,'nfreqs',1,'chanID',ampCh);
-        sig2amp = abs(sig2.data);
-    case 'hilbert'
-        sig1 = bz_Filter(lfp,'passband',sig1band,'filter',filterType,'order',filterOrder,'channels',phaseCh);
-        sig1amp = sig1.amp;
-        
-        sig2 = bz_Filter(lfp,'passband',sig2band,'filter',filterType,'order',filterOrder,'channels',ampCh);
-        sig2amp = sig2.amp;
-        
-end
- 
-sig1amp = zscore(sig1amp);
-sig2amp = zscore(sig2amp);
-
-%%
-sig1binpower = interp1(ampbins,ampbins,sig1amp,'nearest');
-sig1binphase = interp1(phasebins,phasebins,sig1phase,'nearest');
-
-
-powerhist = zeros(ampNumBins,ampNumBins);
-sig2prefangle = zeros(ampNumBins,1);
-sig2powerskew = zeros(ampNumBins,1);
-for bb = 1:ampNumBins
-    for bbb = 1:phaseNumBins
-        ampwintimes = sig2amp(sig1binpower==ampbins(bb) & sig1binphase==phasebins(bbb));
-        phaseamphist(bb,bbb) = mean(ampwintimes);
+% Loading .mat file if exists
+if ~isempty(foldername)
+    if ~isempty(dir([basepath filesep sessionInfo.FileName, '.',foldername, '.*PhaseAmpCouplingByAmp_',num2str(sig2band(1)),num2str(sig2band(end)),'.lfp.mat']))
+        disp(['PhaseAmpCouplingByAmp_', num2str(sig2band(1)),num2str(sig2band(end)),' ' , foldername, ' already detected ! Loading file.'])
+        file = dir([basepath filesep sessionInfo.FileName ,'.',foldername, '.*PhaseAmpCouplingByAmp_',num2str(sig2band(1)),num2str(sig2band(end)),'.lfp.mat'])
+        load(file.name);
+        exist_file = true;
+        %return
     end
-    sig2powerskew(bb) = mean(sig2amp(sig1binpower==ampbins(bb)).*exp(1i.*sig1phase(sig1binpower==ampbins(bb))));
-    sig2prefangle(bb) = angle(sig2powerskew(bb));
-    sig2powerskew(bb) = abs(sig2powerskew(bb));
+else
+    if ~isempty(dir([basepath filesep 'PhaseAmpCouplingByAmp_',num2str(sig2band(1)),num2str(sig2band(end)),'.lfp.mat']))
+        disp('Coherogram already detected! Loading file.')
+        file = dir([basepath filesep 'PhaseAmpCouplingByAmp_',num2str(sig2band(1)),num2str(sig2band(end)),'.lfp.mat']);
+        load(file.name);
+        exist_file = true;
+        %return
+    end
+end
+    
+
+
+%%
+if ~exist_file
+    phasebins = linspace(-pi,pi,phaseNumBins+1);
+    phasebins=phasebins(1:end-1)+diff(phasebins(1:2));
+    ampbins = linspace(-2.5,2.5,ampNumBins);
+    % ampNumBins = length(ampbins);
+
+    %%
+    sig1 = bz_Filter(lfp,'passband',sig1band,'filter',filterType,'order',filterOrder,'channels',phaseCh);
+    sig1phase = sig1.phase;
+    switch method
+        case 'wavelet'
+            sig1 = bz_Wavelet(lfp,'frange',sig1band,'nfreqs',1,'chanID',phaseCh);
+            sig1amp = abs(sig1.data);
+
+            sig2 = bz_Wavelet(lfp,'frange',sig1band,'nfreqs',1,'chanID',ampCh);
+            sig2amp = abs(sig2.data);
+        case 'hilbert'
+            sig1 = bz_Filter(lfp,'passband',sig1band,'filter',filterType,'order',filterOrder,'channels',phaseCh);
+            sig1amp = sig1.amp;
+
+            sig2 = bz_Filter(lfp,'passband',sig2band,'filter',filterType,'order',filterOrder,'channels',ampCh);
+            sig2amp = sig2.amp;
+
+    end
+
+    sig1amp = zscore(sig1amp);
+    sig2amp = zscore(sig2amp);
+
+    %%
+    sig1binpower = interp1(ampbins,ampbins,sig1amp,'nearest');
+    sig1binphase = interp1(phasebins,phasebins,sig1phase,'nearest');
+
+
+    powerhist = zeros(ampNumBins,ampNumBins);
+    sig2prefangle = zeros(ampNumBins,1);
+    sig2powerskew = zeros(ampNumBins,1);
+    for bb = 1:ampNumBins
+        for bbb = 1:phaseNumBins
+            ampwintimes = sig2amp(sig1binpower==ampbins(bb) & sig1binphase==phasebins(bbb));
+            phaseamphist(bb,bbb) = mean(ampwintimes);
+        end
+        sig2powerskew(bb) = mean(sig2amp(sig1binpower==ampbins(bb)).*exp(1i.*sig1phase(sig1binpower==ampbins(bb))));
+        sig2prefangle(bb) = angle(sig2powerskew(bb));
+        sig2powerskew(bb) = abs(sig2powerskew(bb));
+    end
+
+
+    comod.ampbins = ampbins;
+    comod.phasebins = phasebins;
+    comod.sig2powerskew = sig2powerskew;
+    comod.sig2prefangle = sig2prefangle;
+    comod.phaseamphist = phaseamphist;
+    comod.params.sig1band = sig1band;
+    comod.params.sig2band = sig2band;
+    comod.params.method = method;
+    comod.params.filterType = filterType;
+    comod.params.filterOrder = filterOrder;
+    comod.sig1amp = sig1amp;
+    comod.sig2amp = sig2amp;
+    comod.sig1phase = sig1phase;
+    % Adding channels for analysis
+    comod.phaseCh = phaseCh;
+    comod.ampCh = ampCh;
+    if ~isempty(foldername)
+        comod.foldername = foldername;
+    end
+    %% Figure
+
+
+    if makePlot
+        rwbcolormap = makeColorMap([0 0 0.8],[1 1 1],[0.8 0 0]);
+        plotx = linspace(-pi,3*pi,100);
+        if ~isempty(foldername)
+            figure('Name',foldername)
+        else
+            figure('Name',basepath)
+        end
+        subplot(2,2,1)
+        hold on
+        imagesc(phasebins,ampbins,phaseamphist)
+        imagesc(phasebins+2*pi,ampbins,phaseamphist)
+        plot(sig2prefangle,ampbins,'.k')
+        plot(sig2prefangle+2*pi,ampbins,'.k')
+        plot(plotx,cos(plotx),'k')
+        colormap(gca,rwbcolormap)
+        axis xy
+        axis tight
+        ColorbarWithAxis([-0.5 0.5],['Mean Amp.'])
+        caxis([-0.5 0.5])
+        %  xlim([-pi 3*pi]);ylim(ampbins([1 end]))
+        xlabel('Signal 1 Phase');ylabel('Signal 1 Amp (Z)')
+        subplot(4,2,2)
+        plot(ampbins,sig2powerskew,'k','LineWidth',1)
+        xlabel('Signal 1 Amp. (Z)');
+        ylabel('Phase-Amp. Modulation (mrl)')
+        axis tight
+        subplot(4,2,6)
+        histogram(sig1amp,ampbins)
+        xlabel('Signal 1 Amp. (Z)');
+        ylabel('Occupancy')
+        axis tight
+        title('Signal1/2 Amp. Distributions')
+
+        subplot(4,2,8)
+        histogram(sig2amp,ampbins)
+        xlabel('Signal 2 Amp. (Z)');
+        ylabel('Occupancy')
+        axis tight
+
+        subplot(2,2,3)
+        gasphist = hist3([sig1amp,sig2amp],{ampbins,ampbins});
+        imagesc(ampbins,ampbins,gasphist)
+        axis xy
+        xlabel('Signal 1 Power');ylabel('Signal 2 Power')
+
+
+        if saveFig
+            if ~isempty(foldername)
+               saveas(gcf,['lfpAnalysisFigures\PhaseAmpCouplingByAmp.',foldername,'_',num2str(sig2band(1)),num2str(sig2band(end)),'.png'])
+            else
+                saveas(gcf,['lfpAnalysisFigures\PhaseAmpCouplingByAmp_',num2str(sig2band(1)),num2str(sig2band(end)),'.png'])
+            end
+        end
+
+    end
+
+    if saveMat
+        if ~isempty(foldername)
+            try
+                save([basepath filesep sessionInfo.FileName,'.',foldername,'.PhaseAmpCouplingByAmp','_',num2str(sig2band(1)),num2str(sig2band(end)),'.SubSession.lfp.mat'],'comod')
+            catch
+                save([basepath filesep sessionInfo.FileName,'.',foldername,'.PhaseAmpCouplingByAmp','_',num2str(sig2band(1)),num2str(sig2band(end)),'.SubSession.lfp.mat'],'comod','-v7.3')
+            end
+        else
+            try
+                save([basepath filesep sessionInfo.FileName,'.','PhaseAmpCouplingByAmp','_',num2str(sig2band(1)),num2str(sig2band(end)),'.lfp.mat'],'comod')
+            catch
+                save([basepath filesep sessionInfo.FileName,'.','PhaseAmpCouplingByAmp','_',num2str(sig2band(1)),num2str(sig2band(end)),'.lfp.mat'],'comod')
+            end
+        end
+
+
+    end
+else
+    
+    if makePlot
+        rwbcolormap = makeColorMap([0 0 0.8],[1 1 1],[0.8 0 0]);
+        plotx = linspace(-pi,3*pi,100);
+        if ~isempty(foldername)
+            figure('Name',foldername)
+        else
+            figure('Name',basepath)
+        end
+        subplot(2,2,1)
+        hold on
+        imagesc(comod.phasebins,comod.ampbins,comod.phaseamphist)
+        imagesc(comod.phasebins+2*pi,comod.ampbins,comod.phaseamphist)
+        plot(comod.sig2prefangle,comod.ampbins,'.k')
+        plot(comod.sig2prefangle+2*pi,comod.ampbins,'.k')
+        plot(plotx,cos(plotx),'k')
+        colormap(gca,rwbcolormap)
+        axis xy
+        axis tight
+        ColorbarWithAxis([-0.5 0.5],['Mean Amp.'])
+        caxis([-0.5 0.5])
+        %  xlim([-pi 3*pi]);ylim(ampbins([1 end]))
+        xlabel('Signal 1 Phase');ylabel('Signal 1 Amp (Z)')
+        subplot(4,2,2)
+        plot(comod.ampbins,comod.sig2powerskew,'k','LineWidth',1)
+        xlabel('Signal 1 Amp. (Z)');
+        ylabel('Phase-Amp. Modulation (mrl)')
+        axis tight
+        subplot(4,2,6)
+        histogram(comod.sig1amp,comod.ampbins)
+        xlabel('Signal 1 Amp. (Z)');
+        ylabel('Occupancy')
+        axis tight
+        title('Signal1/2 Amp. Distributions')
+
+        subplot(4,2,8)
+        histogram(comod.sig2amp,comod.ampbins)
+        xlabel('Signal 2 Amp. (Z)');
+        ylabel('Occupancy')
+        axis tight
+
+        subplot(2,2,3)
+        gasphist = hist3([comod.sig1amp,comod.sig2amp],{comod.ampbins,comod.ampbins});
+        imagesc(comod.ampbins,comod.ampbins,gasphist)
+        axis xy
+        xlabel('Signal 1 Power');ylabel('Signal 2 Power')
+
+
+    end    
 end
 
-
-comod.ampbins = ampbins;
-comod.phasebins = phasebins;
-comod.sig2powerskew = sig2powerskew;
-comod.sig2prefangle = sig2prefangle;
-comod.phaseamphist = phaseamphist;
-comod.params.sig1band = sig1band;
-comod.params.sig2band = sig2band;
-comod.params.method = method;
-comod.params.filterType = filterType;
-comod.params.filterOrder = filterOrder;
-%% Figure
-
-if makePlot
-    rwbcolormap = makeColorMap([0 0 0.8],[1 1 1],[0.8 0 0]);
-    plotx = linspace(-pi,3*pi,100);
-    figure
-    subplot(2,2,1)
-    hold on
-    imagesc(phasebins,ampbins,phaseamphist)
-    imagesc(phasebins+2*pi,ampbins,phaseamphist)
-    plot(sig2prefangle,ampbins,'.k')
-    plot(sig2prefangle+2*pi,ampbins,'.k')
-    plot(plotx,cos(plotx),'k')
-    colormap(gca,rwbcolormap)
-    axis xy
-    axis tight
-    ColorbarWithAxis([-0.5 0.5],['Mean Amp.'])
-    caxis([-0.5 0.5])
-    %  xlim([-pi 3*pi]);ylim(ampbins([1 end]))
-    xlabel('Signal 1 Phase');ylabel('Signal 1 Amp (Z)')
-    subplot(4,2,2)
-    plot(ampbins,sig2powerskew,'k','LineWidth',1)
-    xlabel('Signal 1 Amp. (Z)');
-    ylabel('Phase-Amp. Modulation (mrl)')
-    axis tight
-    subplot(4,2,6)
-    histogram(sig1amp,ampbins)
-    xlabel('Signal 1 Amp. (Z)');
-    ylabel('Occupancy')
-    axis tight
-    title('Signal1/2 Amp. Distributions')
-    
-    subplot(4,2,8)
-    histogram(sig2amp,ampbins)
-    xlabel('Signal 2 Amp. (Z)');
-    ylabel('Occupancy')
-    axis tight
-    
-    subplot(2,2,3)
-    gasphist = hist3([sig1amp,sig2amp],{ampbins,ampbins});
-    imagesc(ampbins,ampbins,gasphist)
-    axis xy
-    xlabel('Signal 1 Power');ylabel('Signal 2 Power')
-end
 end
 

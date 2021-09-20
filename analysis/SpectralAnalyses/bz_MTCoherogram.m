@@ -1,4 +1,4 @@
-function [coherogram,phase,t,f] = bz_MTCoherogram(lfp1,lfp2,varargin)
+function [coherogram] = bz_MTCoherogram(lfp1,lfp2,varargin)
 
 %MTCoherogram - Compute LFP coherogram by multi-taper estimation.
 %
@@ -55,21 +55,47 @@ function [coherogram,phase,t,f] = bz_MTCoherogram(lfp1,lfp2,varargin)
 % it under the terms of the GNU General Public License as published by
 % the Free Software Foundation; either version 3 of the License, or
 % (at your option) any later version.
+% Function modified by Pablo Abad to incluse inputParser
 
 % Make sure chronux is installed and functional
 CheckChronux('cohgramc');
 
-% Defaults
-f = 1250;
-frequency = [];
-window = 5;
-range = [];
-overlap = [];
-step = [];
-show = 'off';
-tapers = [3 5];
-pad = 0;
-cutoffs = [0 1];
+% Default Params
+p = inputParser();
+addParameter(p,'basepath',pwd,@isdir);
+addParameter(p,'f',1250,@isnumeric);
+addParameter(p,'frequency',[],@isnumeric);
+addParameter(p,'window',5,@isnumeric);
+addParameter(p,'range',[],@isnumeric);
+addParameter(p,'overlap',[],@isnumeric);
+addParameter(p,'step',[],@isnumeric);
+addParameter(p,'show','on',@isstr);
+addParameter(p,'tapers',[3 5], @isnumeric);
+addParameter(p,'pad',0,@isnumeric);
+addParameter(p,'cutoffs',[0 1],@isnumeric);
+addParameter(p,'saveFig',true,@islogical);
+addParameter(p,'foldername',[],@isstr);
+addParameter(p,'saveMat',true,@islogical);
+addParameter(p,'exist_file',false,@islogical);
+
+
+parse(p,varargin{:})
+
+basepath = p.Results.basepath;
+f = p.Results.f;
+frequency = p.Results.frequency;
+window = p.Results.window;
+range = p.Results.range;
+overlap = p.Results.overlap;
+step = p.Results.step;
+show = p.Results.show;
+tapers = p.Results.tapers;
+pad = p.Results.pad;
+cutoffs = p.Results.cutoffs;
+saveFig = p.Results.saveFig;
+foldername = p.Results.foldername;
+saveMat = p.Results.saveMat;
+exist_file = p.Results.exist_file;
 
 % Check number of parameters
 if nargin < 2 | mod(length(varargin),2) ~= 0,
@@ -77,72 +103,40 @@ if nargin < 2 | mod(length(varargin),2) ~= 0,
 end
 
 % Check parameter sizes
-if size(lfp1,2) ~= 1 && size(lfp1,2) ~= 2,
+if size(lfp1.data,2) ~= 1 && size(lfp1.data,2) ~= 2,
 	error('Parameter ''lfp1'' is not a vector or a Nx2 matrix (type ''help <a href="matlab:help MTCoherogram">MTCoherogram</a>'' for details).');
 end
-if size(lfp2,2) ~= 1 && size(lfp2,2) ~= 2,
+if size(lfp2.data,2) ~= 1 && size(lfp2.data,2) ~= 2,
 	error('Parameter ''lfp2'' is not a vector or a Nx2 matrix (type ''help <a href="matlab:help MTCoherogram">MTCoherogram</a>'' for details).');
 end
 
-% Parse parameter list
-for i = 1:2:length(varargin),
-	if ~ischar(varargin{i}),
-		error(['Parameter ' num2str(i+2) ' is not a property (type ''help <a href="matlab:help MTCoherogram">MTCoherogram</a>'' for details).']);
-	end
-	switch(lower(varargin{i})),
-		case 'frequency',
-			frequency = varargin{i+1};
-			if ~isdscalar(frequency,'>0'),
-				error('Incorrect value for property ''frequency'' (type ''help <a href="matlab:help MTCoherogram">MTCoherogram</a>'' for details).');
-			end
-		case 'range',
-			range = varargin{i+1};
-			if ~isdvector(range,'#2','<','>=0'),
-				error('Incorrect value for property ''range'' (type ''help <a href="matlab:help MTCoherogram">MTCoherogram</a>'' for details).');
-			end
-		case 'window',
-			window = varargin{i+1};
-			if ~isdscalar(window,'>0'),
-				error('Incorrect value for property ''window'' (type ''help <a href="matlab:help MTCoherogram">MTCoherogram</a>'' for details).');
-			end
-		case 'overlap',
-			overlap = varargin{i+1};
-			if ~isdscalar(overlap,'>0'),
-				error('Incorrect value for property ''overlap'' (type ''help <a href="matlab:help MTCoherogram">MTCoherogram</a>'' for details).');
-			end
-		case 'step',
-			step = varargin{i+1};
-			if ~isdscalar(step,'>0'),
-				error('Incorrect value for property ''step'' (type ''help <a href="matlab:help MTCoherogram">MTCoherogram</a>'' for details).');
-			end
-		case 'tapers',
-			tapers = varargin{i+1};
-			if ~isivector(tapers,'#2','>0'),
-				error('Incorrect value for property ''tapers'' (type ''help <a href="matlab:help MTCoherogram">MTCoherogram</a>'' for details).');
-			end
-		case 'pad',
-			pad = varargin{i+1};
-			if ~isiscalar(pad,'>-1'),
-				error('Incorrect value for property ''pad'' (type ''help <a href="matlab:help MTCoherogram">MTCoherogram</a>'' for details).');
-			end
-		case 'show',
-			show = varargin{i+1};
-			if ~isstring_FMAT(show,'on','off'),
-				error('Incorrect value for property ''show'' (type ''help <a href="matlab:help MTCoherogram">MTCoherogram</a>'' for details).');
-			end
-		case 'cutoffs',
-			cutoffs = varargin{i+1};
-			if ~isdvector(cutoffs,'#2','>=0','<'),
-				error('Incorrect value for property ''cutoffs'' (type ''help <a href="matlab:help MTCoherogram">MTCoherogram</a>'' for details).');
-			end
-		otherwise,
-			error(['Unknown property ''' num2str(varargin{i}) ''' (type ''help <a href="matlab:help MTCoherogram">MTCoherogram</a>'' for details).']);
-	end
+% Load SessionInfo
+sessionInfo = bz_getSessionInfo(basepath,'noPrompts',true);
+
+% Loading .mat file if exists
+if ~isempty(foldername)
+    if ~isempty(dir([basepath filesep sessionInfo.FileName, '.',foldername, '.*Coherogram.lfp.mat']))
+        disp(['Coherogram ', foldername, ' already detected ! Loading file.'])
+        file = dir([basepath filesep sessionInfo.FileName ,'.',foldername, '.*Coherogram.lfp.mat'])
+        load(file.name);
+        exist_file = true;
+        %return
+    end
+else
+    if ~isempty(dir([basepath filesep '.Coherogram.lfp.mat']))
+        disp('Coherogram already detected! Loading file.')
+        file = dir([basepath filesep '.Coherogram.lfp.mat']);
+        load(file.name);
+        exist_file = true;
+        %return
+    end
 end
 
+
+
 % Determine LFP frequency
-if isempty(frequency),
-	if size(lfp1,2) == 2,
+if isempty(frequency)
+	if size(lfp1,2) == 2
 		frequency = 1/median(diff(lfp1(:,1)));
 	else
 		frequency = f;
@@ -150,8 +144,8 @@ if isempty(frequency),
 end
 
 % Determine step/overlap
-if isempty(step),
-	if isempty(overlap),
+if isempty(step)
+	if isempty(overlap)
 		overlap = window/2;
 	end
 else
@@ -162,27 +156,195 @@ else
 	end
 end
 
-% Compute and plot coherogram
-parameters.Fs = frequency;
-if ~isempty(range), parameters.fpass = range; end
-parameters.tapers = tapers;
-parameters.pad = pad;
-[coherogram,phase,~,~,~,t,f] = cohgramc(lfp1,lfp2,[window window-overlap],parameters);
-% t = t'+lfp1(1,1);
-f = f';
-coherogram = coherogram';
-% coherogram = permute(coherogram,[2 1 3]);  % Previous code by Gabrielle Girardeau, keep it around just in case
-phase = phase';
-if strcmp(lower(show),'on'),
-  figure;hold on;
-  subplot(2,1,1);
-  PlotColorMap(coherogram,'x',t,'y',f,'cutoffs',cutoffs,'newfig','off');
-  xlabel('Time (s)');
-  ylabel('Frequency (Hz)');
-  title('Coherogram Amplitude');
-  subplot(2,1,2);
-  PlotColorMap(phase,'x',t,'y',f,'cutoffs',[-pi pi],'newfig','off');
-  xlabel('Time (s)');
-  ylabel('Frequency (Hz)');
-  title('Coherogram Phase');
+if ~exist_file
+
+
+    % Compute and plot coherogram
+    parameters.Fs = frequency;
+    if ~isempty(range)
+        parameters.fpass = range; 
+    end
+    parameters.tapers = tapers;
+    parameters.pad = pad;
+    [coherogram,phase,~,S1,S2,t,f] = cohgramc(double(lfp1.data),double(lfp2.data),[window window-overlap],parameters);
+
+    % t = t'+lfp1(1,1);
+    f = f';
+    coherogram = coherogram';
+    % coherogram = permute(coherogram,[2 1 3]);  % Previous code by Gabrielle Girardeau, keep it around just in case
+    phase = phase';
+
+
+    minS1 = min(10*log10(mean(S1)));
+    minS2 = min(10*log10(mean(S2)));
+    minS = min(minS1,minS2);
+    maxS1 = max(10*log10(mean(S1)));
+    maxS2 = max(10*log10(mean(S2)));
+    maxS = max(maxS1,maxS2);
+
+    if strcmpi(show,'on')
+      figure
+      set(gcf,'Position',get(0,'ScreenSize'))
+      hold on;
+      subplot(2,1,1);
+      PlotColorMap(coherogram,'x',t,'y',f,'cutoffs',cutoffs,'newfig','off');
+      xlabel('Time (s)');
+      ylabel('Frequency (Hz)');
+      title(['Coherogram Amplitude Ch ', num2str(lfp1.channels),' vs Ch ',num2str(lfp2.channels)]);
+      colorbar
+      subplot(2,1,2);
+      PlotColorMap(phase,'x',t,'y',f,'cutoffs',[-pi pi],'newfig','off');
+      xlabel('Time (s)');
+      ylabel('Frequency (Hz)');
+      title(['Coherogram Phase Ch ', num2str(lfp1.channels), ' vs Ch ', num2str(lfp2.channels)]);
+      colorbar
+
+      if saveFig
+          if ~isempty(foldername)
+            saveas(gcf,['lfpAnalysisFigures\Coherogram_',foldername,'.png']);
+          else    
+            saveas(gcf,'lfpAnalysisFigures\Coherogram.png');
+          end
+      end
+
+      figure,
+      set(gcf,'Position',get(0,'ScreenSize'))
+      subplot(1,4,1)
+      plot(f,mean(coherogram'))
+      xlabel('Frequency (f)');
+      ylabel('Coherence (r)')
+      title(['Coherence Ch ', num2str(lfp1.channels), ' vs Ch ', num2str(lfp2.channels)])
+      xlim(range)
+      ylim([min(mean(coherogram')) max(mean(coherogram'))])
+      subplot(1,4,2)
+      plot(f,mean(phase'))
+      xlabel('Frequency (f)');
+      ylabel('Coherence Phase')
+      title(['Coherence Phase Ch ', num2str(lfp1.channels), ' vs Ch ', num2str(lfp2.channels)])
+      xlim(range)
+      ylim([min(mean(phase')) max(mean(phase'))])
+      subplot(1,4,3)
+      plot(f,10*log10(mean(S1)));
+      xlabel('Frequency (f) ');
+      ylabel('10*log10');
+      title(['Power Spectrum Ch ', num2str(lfp1.channels)]);
+      xlim([range])
+      ylim([minS maxS])
+      subplot(1,4,4)
+      plot(f,10*log10(mean(S2)));
+      xlabel('Frequency (f) ');
+      ylabel('10*log10');
+      title(['Power Spectrum Ch ', num2str(lfp2.channels)]);
+      xlim([range])
+      ylim([minS maxS])
+
+      if saveFig
+          if ~isempty(foldername)
+            saveas(gcf,['lfpAnalysisFigures\Coherence_',foldername,'.png']);
+          else    
+            saveas(gcf,'lfpAnalysisFigures\Coherence.png');
+          end
+      end
+
+    end
+
+    %% Saving matlab struct
+    c = coherogram;
+    coherogram = [];
+    coherogram.coherogram = c;
+    coherogram.phase = phase;
+    coherogram.t = t;
+    coherogram.f = f;
+    coherogram.S1 = S1;
+    coherogram.S2 = S2;
+    coherogram.ch1 = lfp1.channels;
+    coherogram.ch2 = lfp2.channels;
+    if ~isempty(foldername)
+        coherogram.foldername = foldername;
+    end
+
+    if saveMat
+        if ~isempty(foldername)
+            try
+                save([basepath filesep sessionInfo.FileName, '.', foldername, '.Coherogram.lfp.mat'], 'coherogram');
+            catch
+                save([basepath filesep sessionInfo.FileName, '.', foldername, '.Coherogram.lfp.mat'], 'coherogram', '-v7.3');
+            end
+        else
+            try
+                save([basepath filesep sessionInfo.FileName '.Coherogram.lfp.mat'], 'coherogram');
+            catch
+                save([basepath filesep sessionInfo.FileName '.Coherogram.lfp.mat'], 'coherogram','-v7.3');
+            end
+        end
+    end
+else
+    minS1 = min(10*log10(mean(coherogram.S1)));
+    minS2 = min(10*log10(mean(coherogram.S2)));
+    minS = min(minS1,minS2);
+    maxS1 = max(10*log10(mean(coherogram.S1)));
+    maxS2 = max(10*log10(mean(coherogram.S2)));
+    maxS = max(maxS1,maxS2);
+    
+    if strcmpi(show,'on')
+      if ~isempty(foldername)
+        figure('Name',coherogram.foldername),
+      else
+        figure('Name',basepath)
+      end
+      set(gcf,'Position',get(0,'ScreenSize'))
+      hold on;
+      subplot(2,1,1);
+      PlotColorMap(coherogram.coherogram,'x',coherogram.t,'y',coherogram.f,'cutoffs',cutoffs,'newfig','off');
+      xlabel('Time (s)');
+      ylabel('Frequency (Hz)');
+      title(['Coherogram Amplitude Ch ', num2str(lfp1.channels),' vs Ch ',num2str(lfp2.channels)]);
+      colorbar
+      subplot(2,1,2);
+      PlotColorMap(coherogram.phase,'x',coherogram.t,'y',coherogram.f,'cutoffs',[-pi pi],'newfig','off');
+      xlabel('Time (s)');
+      ylabel('Frequency (Hz)');
+      title(['Coherogram Phase Ch ', num2str(lfp1.channels), ' vs Ch ', num2str(lfp2.channels)]);
+      colorbar
+
+      if ~isempty(foldername)
+        figure('Name',coherogram.foldername),
+      else
+        figure('Name',basepath)
+      end
+      set(gcf,'Position',get(0,'ScreenSize'))
+      subplot(1,4,1)
+      plot(coherogram.f,mean(coherogram.coherogram'))
+      xlabel('Frequency (f)');
+      ylabel('Coherence (r)')
+      title(['Coherence Ch ', num2str(lfp1.channels), ' vs Ch ', num2str(lfp2.channels)])
+      xlim(range)
+      ylim([min(mean(coherogram.coherogram')) max(mean(coherogram.coherogram'))])
+      subplot(1,4,2)
+      plot(coherogram.f,mean(coherogram.phase'))
+      xlabel('Frequency (f)');
+      ylabel('Coherence Phase')
+      title(['Coherence Phase Ch ', num2str(lfp1.channels), ' vs Ch ', num2str(lfp2.channels)])
+      xlim(range)
+      ylim([min(mean(coherogram.phase')) max(mean(coherogram.phase'))])
+      subplot(1,4,3)
+      plot(coherogram.f,10*log10(mean(coherogram.S1)));
+      xlabel('Frequency (f) ');
+      ylabel('10*log10');
+      title(['Power Spectrum Ch ', num2str(lfp1.channels)]);
+      xlim([range])
+      ylim([minS maxS])
+      subplot(1,4,4)
+      plot(coherogram.f,10*log10(mean(coherogram.S2)));
+      xlabel('Frequency (f) ');
+      ylabel('10*log10');
+      title(['Power Spectrum Ch ', num2str(lfp2.channels)]);
+      xlim([range])
+      ylim([minS maxS])
+
+    end
+    
+    
+    
 end
+

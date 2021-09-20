@@ -45,20 +45,31 @@ function [Sc,Cmat,Ctot,Cvec,Cent,f]=CrossSpecMatc(data,win,params)
 %       Cent A different measure of total coherence: GM/AM of SV^2s
 %       f (frequencies)  
 d=ndims(data);
-if d<2, error('Need multidimensional array'); end
-if d==2, [N,C]=size(data); end;
-if d==3, [N,C,Ntr]=size(data); end; 
-if nargin < 3; params=[]; end;
+if d<2
+    error('Need multidimensional array');
+end
+if d==2 
+    [N,C]=size(data); 
+end
+if d==3 
+    [N,C,Ntr]=size(data); 
+end
+if nargin < 3
+    params=[]; 
+end
+
 [tapers,pad,Fs,fpass,err,trialave,params]=getparams(params);
 clear err trialave params
-nwin=round(win*Fs); nfft=max(2^(nextpow2(nwin)+pad),nwin); 
+% nwin=round(win*Fs); 
+nwin=round(win(1)*Fs);
+nfft=max(2^(nextpow2(nwin)+pad),nwin); 
 [f,findx]=getfgrid(Fs,nfft,fpass); 
 tapers=dpsschk(tapers,nwin,Fs); % check tapers
 Sc=zeros(length(findx),C,C);
 
 Nwins=floor(N/nwin);
 
-if d==3, % If there are multiple trials
+if d==3 % If there are multiple trials
 for iwin=1:Nwins,
     for i=1:Ntr, 
         data1=squeeze(data(1+(iwin-1)*nwin:iwin*nwin,:,i));
@@ -75,14 +86,14 @@ end
 Sc=Sc/(Nwins*Ntr);
 end
 
-if d==2, % only one trial
+if d==2 % only one trial
 for iwin=1:Nwins,
         data1=squeeze(data(1+(iwin-1)*nwin:iwin*nwin,:));
         J1=mtfftc(data1,tapers,nfft,Fs);
         J1=J1(findx,:,:);
         for k=1:C,
             for l=1:C,
-            Sc(:,k,l)=Sc(:,k,l)+squeeze(mean(conj(J1(:,:,k)).*J1(:,:,l),2));
+                Sc(:,k,l)=Sc(:,k,l)+squeeze(mean(conj(J1(:,:,k)).*J1(:,:,l),2));
             end
         end
 end
@@ -91,21 +102,22 @@ end
 
 Cmat=Sc;
 Sdiag=zeros(length(findx),C);
-for k=1:C,
+for k=1:C
     Sdiag(:,k)=squeeze(Sc(:,k,k));
 end
 
-for k=1:C,
-    for l=1:C,
+for k=1:C
+    for l=1:C
         Cmat(:,k,l)=Sc(:,k,l)./sqrt(abs(Sdiag(:,k).*Sdiag(:,l)));
     end
 end
 
 Ctot=zeros(length(findx),1); Cent=Ctot;
 Cvec=zeros(length(findx),C);
-for i=1:length(findx),
+for i=1:length(findx)
     [u s]=svd(squeeze(Sc(i,:,:)));s=diag(s);
     Ctot(i)=s(1)/sum(s); Cent(i)=exp(mean(log(s)))/mean(s);             
     Cvec(i,:)=transpose(u(:,1));
 end
         
+if (
