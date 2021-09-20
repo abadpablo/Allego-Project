@@ -65,6 +65,8 @@ addParameter(p,'cmBin',2.5,@isnumeric);
 addParameter(p,'periodicAnalysis',false,@islogical);
 addParameter(p,'numRand',10,@isnumeric);
 addParameter(p,'spikeShuffling',true,@islogical);
+addParameter(p,'buzAnalysis',true,@islogical);
+addParameter(p,'tintAnalysis',true,@islogical);
 
 parse(p,varargin{:});
 smooth = p.Results.smooth;
@@ -83,6 +85,8 @@ periodicAnalysis = p.Results.periodicAnalysis;
 numRand = p.Results.numRand;
 basepath = p.Results.basepath;
 spikeShuffling = p.Results.spikeShuffling;
+buzAnalysis = p.Results.buzAnalysis;
+tintAnalysis = p.Results.tintAnalysis;
 
 %% In case firingMapsAvg already exists
 if ~isempty(dir([basepath filesep '*firingMapsAvg.cellinfo.mat']))
@@ -192,8 +196,14 @@ end
 %% get firign rate maps & map stats
 for unit = 1:length(spikes.times)
     for c = 1:conditions
-            map{unit}{c} = Map(positions{c},spikes.times{unit},'smooth',smooth,'minTime',minTime,...
-                'nBins',nBins{c},'maxGap',maxGap,'mode',mode,'maxDistance',maxDistance);
+            if buzAnalysis
+                map{unit}{c} = Map(positions{c},spikes.times{unit},'smooth',smooth,'minTime',minTime,...
+                    'nBins',nBins{c},'maxGap',maxGap,'mode',mode,'maxDistance',maxDistance);
+            elseif tintAnalysis
+                map{unit}{c} = firingMapsBuild(positions{c},spikes.times{unit},'smooth',smooth,'minTime',minTime,...
+                    'nBins',nBins{c},'maxGap',maxGap,'mode',mode,'maxDistance',maxDistance);
+            end
+            
             stats{unit}{c} = MapStats(map{unit}{c},spikes.times{unit},'nBins',nBins{c},'verbose','on');
             
             % shuffling of spikes times
