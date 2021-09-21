@@ -817,7 +817,7 @@ if any(ismember(listOfAnalysis,'behaviour'))
         
         % PLACE CELLS SUMMARY
         spikes = loadSpikes('getWaveformsFromDat',getWaveformsFromDat,'forceReload',false,'showWaveforms',showWaveforms);
-        firingMaps = bz_firingMapAvg(behaviour,spikes,'saveMat',true,'speedFilter',true,'periodicAnalysis',false);       
+        firingMaps = bz_firingMapAvg(behaviour,spikes,'saveMat',true,'speedFilter',true,'periodicAnalysis',false,'spikeShuffling',false);       
     catch
         warning('It has not been possible to run Behaviour code...')
     end
@@ -1062,7 +1062,8 @@ end
 %% 10 - PLOT PLACE FIELDS
 try
     disp('Plotting Place Fields')
-    plot_placeFields(firingMaps,spikes,tracking,cell_metrics);
+%     plot_placeFields(firingMaps,spikes,tracking,cell_metrics);
+    plot_placeFields(firingMaps,spikes,tracking);
 catch
     disp('It is not possible to run plot Place Fields')
 end

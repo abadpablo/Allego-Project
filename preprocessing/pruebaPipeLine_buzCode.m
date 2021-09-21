@@ -125,7 +125,9 @@ bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[]);
 <<<<<<< HEAD
 %% HPS23 090621 Prueba para SubSessions
 bpath = 'G:\HPS23\HPS23_090621_sess9';
-bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'diffLFPS',true,'analyzeSubSessions',true,'exclude',{'spikes','ripples'});
+bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'diffLFPS',true,'analyzeSubSessions',true,'exclude',{'spikes','ripples','thetaModulation'});
+
+
 =======
 %%
 
