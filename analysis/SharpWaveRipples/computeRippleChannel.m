@@ -241,267 +241,286 @@ for shk=1:length(SHANKS)
         else
             eeg=single(lfp.data(:,SHANKS{1, shk}(CH)));
         end
-
-        for i = 1:size(ripples.peaks,1)
-            ripple_ave(i,:) = eeg(round(ripples.peaks(i)*LfpSamplingrate)-Win:round(ripples.peaks(i)*LfpSamplingrate)+Win,:);
+        
+        if ~isempty(ripples.peaks)
+            for i = 1:size(ripples.peaks,1)
+                ripple_ave(i,:) = eeg(round(ripples.peaks(i)*LfpSamplingrate)-Win:round(ripples.peaks(i)*LfpSamplingrate)+Win,:);
+            end
+        else
+            ripple_ave = [];
         end
 
-        All_Ripple_Avg=double(mean(ripple_ave));
+        if ~isempty(ripple_ave)
+            All_Ripple_Avg=double(mean(ripple_ave));
 
-        Frq=120:180;
-        scale=frq2scal(Frq,LfpSamplingrate);
-        S=cwt(All_Ripple_Avg,scale,'morl');
-        g_baseline= (envelop(S.*S))';
-        Power=mean(g_baseline(50:100,:),2);
+            Frq=120:180;
+            scale=frq2scal(Frq,LfpSamplingrate);
+            S=cwt(All_Ripple_Avg,scale,'morl');
+            g_baseline= (envelop(S.*S))';
+            Power=mean(g_baseline(50:100,:),2);
 
-        Rippl_Matrix{1,shk}(CH,:)=All_Ripple_Avg;
-        Ripples_Power=[Ripples_Power; mean(Power) SHANKS{1,shk}(CH)] ;
-        Ripples_Power_Matrix{1,shk}(CH,:)=Power;
-        Ripples_CSD{1,shk}(CH,:)=[sum(diff(smooth1D(All_Ripple_Avg(50:70),10),2)) sum(diff(smooth1D(All_Ripple_Avg(70:100),10),2)) SHANKS{1,shk}(CH) ];
+            Rippl_Matrix{1,shk}(CH,:)=All_Ripple_Avg;
+            Ripples_Power=[Ripples_Power; mean(Power) SHANKS{1,shk}(CH)] ;
+            Ripples_Power_Matrix{1,shk}(CH,:)=Power;
+            Ripples_CSD{1,shk}(CH,:)=[sum(diff(smooth1D(All_Ripple_Avg(50:70),10),2)) sum(diff(smooth1D(All_Ripple_Avg(70:100),10),2)) SHANKS{1,shk}(CH) ];
+        end
+        
+        
+        
     end
-
 end
 
 %% find Deep and superficial channels ######################################
 
-Deep_Sup=[];
-con_sum_all=[];
-con_direction_all=[];
+if ~isempty(Ripples_CSD)
+    Deep_Sup=[];
+    con_sum_all=[];
+    con_direction_all=[];
 
-for shk=1:size(SHANKS,2)
-    clear Reversal_channel
-    con_direction=Ripples_CSD{1,shk}(:,1).*Ripples_CSD{1,shk}(:,2);
-    con_sum=Ripples_CSD{1,shk}(:,1)+Ripples_CSD{1,shk}(:,2);
-    con_sum_all=[con_sum_all;con_sum Ripples_CSD{1,shk}(:,3)];
-    con_direction_all=[con_direction_all; con_direction Ripples_CSD{1,shk}(:,3)];
-    nd=find(con_direction<0);
-    ndx=find(con_sum<0);
+    for shk=1:size(SHANKS,2)
+        clear Reversal_channel
+        con_direction=Ripples_CSD{1,shk}(:,1).*Ripples_CSD{1,shk}(:,2);
+        con_sum=Ripples_CSD{1,shk}(:,1)+Ripples_CSD{1,shk}(:,2);
+        con_sum_all=[con_sum_all;con_sum Ripples_CSD{1,shk}(:,3)];
+        con_direction_all=[con_direction_all; con_direction Ripples_CSD{1,shk}(:,3)];
+        nd=find(con_direction<0);
+        ndx=find(con_sum<0);
 
-    if isempty(nd)==0
-        Reversal_channel=nd(end);
-        Deep_Sup{1,shk}(1:Reversal_channel,1)=Reversal_channel-(1:Reversal_channel);
-        if Reversal_channel< size(SHANKS{1,shk},2)
-            Deep_Sup{1,shk}(Reversal_channel+1:size(SHANKS{1,shk},2),1)=Reversal_channel-(Reversal_channel+1:size(SHANKS{1,shk},2));
-        end       
-    elseif isempty(ndx)==0
-        Reversal_channel=ndx(end);
-        Deep_Sup{1,shk}(1:Reversal_channel,1)=Reversal_channel-(1:Reversal_channel);
-        if Reversal_channel< size(SHANKS{1,shk},2)
-            Deep_Sup{1,shk}(Reversal_channel+1:size(SHANKS{1,shk},2),1)=Reversal_channel-(Reversal_channel+1:size(SHANKS{1,shk},2));
+        if isempty(nd)==0
+            Reversal_channel=nd(end);
+            Deep_Sup{1,shk}(1:Reversal_channel,1)=Reversal_channel-(1:Reversal_channel);
+            if Reversal_channel< size(SHANKS{1,shk},2)
+                Deep_Sup{1,shk}(Reversal_channel+1:size(SHANKS{1,shk},2),1)=Reversal_channel-(Reversal_channel+1:size(SHANKS{1,shk},2));
+            end       
+        elseif isempty(ndx)==0
+            Reversal_channel=ndx(end);
+            Deep_Sup{1,shk}(1:Reversal_channel,1)=Reversal_channel-(1:Reversal_channel);
+            if Reversal_channel< size(SHANKS{1,shk},2)
+                Deep_Sup{1,shk}(Reversal_channel+1:size(SHANKS{1,shk},2),1)=Reversal_channel-(Reversal_channel+1:size(SHANKS{1,shk},2));
+            end
+        else
+            Deep_Sup{1,shk}(:,1)=-(1:size(SHANKS{1,shk},2));
         end
-    else
-        Deep_Sup{1,shk}(:,1)=-(1:size(SHANKS{1,shk},2));
     end
-
 end
 
 %%
 % Assigning  ripple , SWR , and noise channel #############################
-[~,nd_Ripple]=max(Ripples_Power(:,1));
-Rip_chnl=Ripples_Power(nd_Ripple,2);
+if ~isempty(Ripples_CSD)
+    [~,nd_Ripple]=max(Ripples_Power(:,1));
+    Rip_chnl=Ripples_Power(nd_Ripple,2);
 
-con_direction_all(con_direction_all(:,1)<0,1)=NaN;
-[~,nd_noise]=min(con_direction_all(:,1));
-noise_chnl=con_direction_all(nd_noise,2);
+    con_direction_all(con_direction_all(:,1)<0,1)=NaN;
+    [~,nd_noise]=min(con_direction_all(:,1));
+    noise_chnl=con_direction_all(nd_noise,2);
 
-[~,nd_SWR]=max(con_sum_all(:,1));
-SWR_chnl=con_sum_all(nd_SWR,2);
+    [~,nd_SWR]=max(con_sum_all(:,1));
+    SWR_chnl=con_sum_all(nd_SWR,2);
+end
 
 %% 1-Plot ripple layout
 
-figure('position',[200 115 1300 800])
-subplot(4,1,[1:3])
-Sh_spacing=200;
-chan_spacing=800;
-ylabel_p=[];
-K=0;
-for shk=1:length(SHANKS)
-    
-    clear var SD
-    
-    for CH=1:length(SHANKS{shk})
-        K=K+1;
-        
-        clear var Ripple_channel Cr
-        
-        Ripple_Y=Rippl_Matrix{shk}(CH,:)-(CH-1)*chan_spacing;
-        Ripple_X=[1:length(Ripple_Y)]+(shk-1)*Sh_spacing;
-        
-        SD=Deep_Sup{shk}(CH);
-     
-        % Deep sup layer Colors ###########################################
-        if SD <0
-            Cr=[0 146 146]./256;
-        else
-            Cr=[0 109 219]./256;
-        end
-        plot(Ripple_X,Ripple_Y,'color',Cr,'linewidth',1);
-        hold on
-        % Channel Colors ##################################################
-        if SHANKS{1,shk}(CH)==Rip_chnl
-            channelname='Ripple';
-            plot(Ripple_X,Ripple_Y,'color','r','linewidth',1,'LineStyle','-.');
-            text(Ripple_X(end)-20,Ripple_Y(1)+2*Sh_spacing,channelname,'color','r','fontsize',10)
-        elseif SHANKS{1,shk}(CH)==SWR_chnl
-            channelname='SWR';
-            plot(Ripple_X,Ripple_Y,'color','r','linewidth',1,'LineStyle','-.');
-            text(Ripple_X(end),Ripple_Y(1)+2*Sh_spacing,channelname,'color','r','fontsize',10)
-        elseif SHANKS{1,shk}(CH)==noise_chnl
-            channelname='noise';
-            plot(Ripple_X,Ripple_Y,'color','r','linewidth',1,'LineStyle','-.');
-            text(Ripple_X(end),Ripple_Y(1)+2*Sh_spacing,channelname,'color','r','fontsize',10)
-        end
+if ~isempty(Ripples_CSD)
+    figure('position',[200 115 1300 800])
+    subplot(4,1,[1:3])
+    Sh_spacing=200;
+    chan_spacing=800;
+    ylabel_p=[];
+    K=0;
+    for shk=1:length(SHANKS)
 
-        %Type channel number and deep sup
-        %##################################################################
-        if SD <0
-        text(Ripple_X(1)-30,Ripple_Y(1)+2*Sh_spacing,['Sup' num2str([SHANKS{1,shk}(CH)])])
-        else
-        text(Ripple_X(1)-30,Ripple_Y(1)+2*Sh_spacing,['Deep' num2str([SHANKS{1,shk}(CH)])])
+        clear var SD
+
+        for CH=1:length(SHANKS{shk})
+            K=K+1;
+
+            clear var Ripple_channel Cr
+
+            Ripple_Y=Rippl_Matrix{shk}(CH,:)-(CH-1)*chan_spacing;
+            Ripple_X=[1:length(Ripple_Y)]+(shk-1)*Sh_spacing;
+
+            SD=Deep_Sup{shk}(CH);
+
+            % Deep sup layer Colors ###########################################
+            if SD <0
+                Cr=[0 146 146]./256;
+            else
+                Cr=[0 109 219]./256;
+            end
+            plot(Ripple_X,Ripple_Y,'color',Cr,'linewidth',1);
+            hold on
+            % Channel Colors ##################################################
+            if SHANKS{1,shk}(CH)==Rip_chnl
+                channelname='Ripple';
+                plot(Ripple_X,Ripple_Y,'color','r','linewidth',1,'LineStyle','-.');
+                text(Ripple_X(end)-20,Ripple_Y(1)+2*Sh_spacing,channelname,'color','r','fontsize',10)
+            elseif SHANKS{1,shk}(CH)==SWR_chnl
+                channelname='SWR';
+                plot(Ripple_X,Ripple_Y,'color','r','linewidth',1,'LineStyle','-.');
+                text(Ripple_X(end),Ripple_Y(1)+2*Sh_spacing,channelname,'color','r','fontsize',10)
+            elseif SHANKS{1,shk}(CH)==noise_chnl
+                channelname='noise';
+                plot(Ripple_X,Ripple_Y,'color','r','linewidth',1,'LineStyle','-.');
+                text(Ripple_X(end),Ripple_Y(1)+2*Sh_spacing,channelname,'color','r','fontsize',10)
+            end
+
+            %Type channel number and deep sup
+            %##################################################################
+            if SD <0
+            text(Ripple_X(1)-30,Ripple_Y(1)+2*Sh_spacing,['Sup' num2str([SHANKS{1,shk}(CH)])])
+            else
+            text(Ripple_X(1)-30,Ripple_Y(1)+2*Sh_spacing,['Deep' num2str([SHANKS{1,shk}(CH)])])
+            end
+            %Type test number #################################################
+            hold on
         end
-        %Type test number #################################################
-        hold on
     end
-end
 
-set(gca,'YTick',[])
-set(gca,'visible','off')
-set(gca,'color','w')
+    set(gca,'YTick',[])
+    set(gca,'visible','off')
+    set(gca,'color','w')
 
-%% 2-Plot Signal to noise ratio in all of the channels
-% figure('position',[200 700 500 270])
-subplot(4,3,10)
-Sh_spacing=1;
-chan_spacing=.5;
-yticks_p=[];
+    %% 2-Plot Signal to noise ratio in all of the channels
+    % figure('position',[200 700 500 270])
+    subplot(4,3,10)
+    Sh_spacing=1;
+    chan_spacing=.5;
+    yticks_p=[];
 
-for shk=1:length(SHANKS)
-    
-    clear var ChannelsPerShank
-    
-    for CH=1:length(SHANKS{shk})
-        
-        if SHANKS{shk}(CH)==RefrenceRippleChannel_test
-            Cr='m';
-        elseif CH==Refrence_chan(shk,2)
-            Cr='r';
-        else
-            Cr=[222, 222, 222]/256;
+    for shk=1:length(SHANKS)
+
+        clear var ChannelsPerShank
+
+        for CH=1:length(SHANKS{shk})
+
+            if SHANKS{shk}(CH)==RefrenceRippleChannel_test
+                Cr='m';
+            elseif CH==Refrence_chan(shk,2)
+                Cr='r';
+            else
+                Cr=[222, 222, 222]/256;
+            end
+
+            %Plot channels ####################################################
+            recX=shk*2;
+            recY=CH-chan_spacing/2;
+            Ripple_X=[recX recX+Sh_spacing recX+Sh_spacing recX];
+            Ripple_Y=[recY recY recY+chan_spacing  recY+chan_spacing];
+            fill(Ripple_X,Ripple_Y,Cr,'edgecolor','none');
+            hold on
         end
-        
-        %Plot channels ####################################################
-        recX=shk*2;
-        recY=CH-chan_spacing/2;
-        Ripple_X=[recX recX+Sh_spacing recX+Sh_spacing recX];
-        Ripple_Y=[recY recY recY+chan_spacing  recY+chan_spacing];
-        fill(Ripple_X,Ripple_Y,Cr,'edgecolor','none');
-        hold on
+
+        % x and y ticks label position ########################################
+        xticks_p(shk)=recX+Sh_spacing/2;
+        yticks_p=[yticks_p;length(SHANKS{shk})];
+        % import channel number having minimum NSR at each shank ##############
+        MinSNRchannel=SHANKS{1,shk}(Refrence_chan(shk,2));
+        text(recX,0,num2str([MinSNRchannel]))
+
     end
-    
-    % x and y ticks label position ########################################
-    xticks_p(shk)=recX+Sh_spacing/2;
-    yticks_p=[yticks_p;length(SHANKS{shk})];
-    % import channel number having minimum NSR at each shank ##############
-    MinSNRchannel=SHANKS{1,shk}(Refrence_chan(shk,2));
-    text(recX,0,num2str([MinSNRchannel]))
-    
-end
-xticks(xticks_p)
-xticklabels(round(Refrence_chan(:,1),4))
-xlabel('Minimum SNR per shank','fontsize', 14)
-yticks(1:max(yticks_p))
-ylim([0 max(yticks_p)+1])
-ylabel('Channel Number','fontsize', 14)
-axis ij
-title('XML-Anatomical Groups Number','fontsize', 10)
-box('off')
+    xticks(xticks_p)
+    xticklabels(round(Refrence_chan(:,1),4))
+    xlabel('Minimum SNR per shank','fontsize', 14)
+    yticks(1:max(yticks_p))
+    ylim([0 max(yticks_p)+1])
+    ylabel('Channel Number','fontsize', 14)
+    axis ij
+    title('XML-Anatomical Groups Number','fontsize', 10)
+    box('off')
 
-%% 3-Plot Ripple-noise correlation
+    %% 3-Plot Ripple-noise correlation
 
-a=[];
-a=Ripples_Power(:,1);
-a=a./max(a);
-b=[];
-b=Signal2Noise(:,1);
-b=b./max(b);
-[r,p]=corrcoef(a,b);
-R=r(1,2);
-P=p(1,2);
-    
-% figure('position',[700 700 300 270])
-subplot(4,3,11)
-plot(a,b,'ok','linewidth',3)
-hold on;
-h = lsline;
-set(h,'color','r','linewidth',2)
-xlabel('Ripple power')
-ylabel('SNR')
-title (['r = ' num2str(R) ['    pval = ' num2str(P)]] )
+    a=[];
+    a=Ripples_Power(:,1);
+    a=a./max(a);
+    b=[];
+    b=Signal2Noise(:,1);
+    b=b./max(b);
+    [r,p]=corrcoef(a,b);
+    R=r(1,2);
+    P=p(1,2);
 
-%% 4-plot Power layout
-colmn=size(Ripples_Power_Matrix,2);
-for i=1:colmn
-    ChannelNumber(i)=size(Ripples_Power_Matrix{1, i},1);
-end
-rows=max(ChannelNumber);
-Ripple_length=size(Ripples_Power_Matrix{1, 1},2);
-Power_Matrix=zeros(rows,colmn*Ripple_length);
+    % figure('position',[700 700 300 270])
+    subplot(4,3,11)
+    plot(a,b,'ok','linewidth',3)
+    hold on;
+    h = lsline;
+    set(h,'color','r','linewidth',2)
+    xlabel('Ripple power')
+    ylabel('SNR')
+    title (['r = ' num2str(R) ['    pval = ' num2str(P)]] )
 
-for shk=1:colmn
-    begin_ndx=(shk-1)*Ripple_length+1;
-    end_ndx=shk*Ripple_length;
-    rows_number=ChannelNumber(shk);
-    Power_Matrix(1:rows_number,begin_ndx:end_ndx)= Ripples_Power_Matrix{1, shk};
-end
-
-% figure('position',[1000 700 500 270])
-subplot(4,3,12)
-imagesc(Power_Matrix)
-text(1,1,'1','color','w')
-colormap jet
-xlabel('Shanks')
-ylabel('Channels')
-set(gca,'YTick',[])
-set(gca,'XTick',[])
-
-
-mkdir(basePath,'SummaryFigures');
-if ~isempty(foldername)
-    foldername_filename = strsplit(foldername,'_');
-    foldername_file = foldername_filename{end};
-    saveas(gcf,['SummaryFigures',filesep,strcat('rippleChannels.',foldername,'.png')])
-else
-    saveas(gcf,['SummaryFigures',filesep,'rippleChannels.png']);
-end
-
-
-if ~noPrompts
-    Bout_2 = input(sprintf('Do you like the selected channels?  (if yes press 1 else press any key)   '));
-    if Bout_2==1
-        disp(['Ripple_Channel=' num2str(Rip_chnl) ' Sharpwave_Channel=' num2str(SWR_chnl) '  Noise_Chnnel='  num2str(noise_chnl) ])
-        disp('Done!')
-    else
-
-        Bout_3 = input(sprintf('Insert Ripple,Swr,and noise as : [Ripple_Chnnel# Swr_Chnnel# noise_Chnnel#]'));
-        disp(['Ripple_Channel=' num2str(Bout_3(1)) ' Sharpwave_Channel=' num2str(Bout_3(2)) '  noise_Chnnel=' num2str(Bout_3(3)) ])
+    %% 4-plot Power layout
+    colmn=size(Ripples_Power_Matrix,2);
+    for i=1:colmn
+        ChannelNumber(i)=size(Ripples_Power_Matrix{1, i},1);
     end
-end
+    rows=max(ChannelNumber);
+    Ripple_length=size(Ripples_Power_Matrix{1, 1},2);
+    Power_Matrix=zeros(rows,colmn*Ripple_length);
 
-rippleChannels.Ripple_Channel=Rip_chnl - 1;
-rippleChannels.Sharpwave_Channel=SWR_chnl - 1;
-rippleChannels.Noise_Channel=noise_chnl - 1;
-rippleChannels.Deep_Sup=Deep_Sup;
-rippleChannels.foldername = foldername;
+    for shk=1:colmn
+        begin_ndx=(shk-1)*Ripple_length+1;
+        end_ndx=shk*Ripple_length;
+        rows_number=ChannelNumber(shk);
+        Power_Matrix(1:rows_number,begin_ndx:end_ndx)= Ripples_Power_Matrix{1, shk};
+    end
 
-if saveMat
-    disp('Saving results...');
+    % figure('position',[1000 700 500 270])
+    subplot(4,3,12)
+    imagesc(Power_Matrix)
+    text(1,1,'1','color','w')
+    colormap jet
+    xlabel('Shanks')
+    ylabel('Channels')
+    set(gca,'YTick',[])
+    set(gca,'XTick',[])
+
+
+    mkdir(basePath,'SummaryFigures');
     if ~isempty(foldername)
-        filename = split(pwd,filesep); filename = filename{end};
-        save([strcat(filename,'.',foldername),'.channelinfo.SubSession.ripples.mat'],'rippleChannels');
+        foldername_filename = strsplit(foldername,'_');
+        foldername_file = foldername_filename{end};
+        saveas(gcf,['SummaryFigures',filesep,strcat('rippleChannels.',foldername,'.png')])
     else
-        filename = split(pwd,filesep); filename = filename{end};
-        save([filename '.channelinfo.ripples.mat'],'rippleChannels');
+        saveas(gcf,['SummaryFigures',filesep,'rippleChannels.png']);
     end
+
+
+    if ~noPrompts
+        Bout_2 = input(sprintf('Do you like the selected channels?  (if yes press 1 else press any key)   '));
+        if Bout_2==1
+            disp(['Ripple_Channel=' num2str(Rip_chnl) ' Sharpwave_Channel=' num2str(SWR_chnl) '  Noise_Chnnel='  num2str(noise_chnl) ])
+            disp('Done!')
+        else
+
+            Bout_3 = input(sprintf('Insert Ripple,Swr,and noise as : [Ripple_Chnnel# Swr_Chnnel# noise_Chnnel#]'));
+            disp(['Ripple_Channel=' num2str(Bout_3(1)) ' Sharpwave_Channel=' num2str(Bout_3(2)) '  noise_Chnnel=' num2str(Bout_3(3)) ])
+        end
+    end
+
+    rippleChannels.Ripple_Channel=Rip_chnl - 1;
+    rippleChannels.Sharpwave_Channel=SWR_chnl - 1;
+    rippleChannels.Noise_Channel=noise_chnl - 1;
+    rippleChannels.Deep_Sup=Deep_Sup;
+    rippleChannels.foldername = foldername;
+
+    if saveMat
+        disp('Saving results...');
+        if ~isempty(foldername)
+            filename = split(pwd,filesep); filename = filename{end};
+            save([strcat(filename,'.',foldername),'.channelinfo.SubSession.ripples.mat'],'rippleChannels');
+        else
+            filename = split(pwd,filesep); filename = filename{end};
+            save([filename '.channelinfo.ripples.mat'],'rippleChannels');
+        end
+    end
+else
+    rippleChannels.Ripple_Channel = [];
+    rippleChannels.Sharpwave_Channel = [];
+    rippleChannels.Noise_Channel = [];
+    rippleChannels_Deep_Sup = [];
+    rippleChannels.foldername = foldername;
 end
     
 
