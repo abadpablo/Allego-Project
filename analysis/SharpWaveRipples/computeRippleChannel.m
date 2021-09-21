@@ -249,14 +249,11 @@ for shk=1:length(SHANKS)
         else
             ripple_ave = [];
         end
-<<<<<<< HEAD
+
         
         All_Ripple_Avg=double(mean(ripple_ave));
-=======
-
         if ~isempty(ripple_ave)
             All_Ripple_Avg=double(mean(ripple_ave));
->>>>>>> dd9492c97a3e85754690b34830273e81cfdb87b9
 
             Frq=120:180;
             scale=frq2scal(Frq,LfpSamplingrate);
