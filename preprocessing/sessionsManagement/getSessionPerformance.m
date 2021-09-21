@@ -123,9 +123,10 @@ for ii=1:length(MergePoints.foldernames)
                 
                 
             catch
-                
-                
+
             end
+            
+            cd(basepath)
             
 
         end

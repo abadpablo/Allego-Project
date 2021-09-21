@@ -177,22 +177,43 @@ if isempty(map.z), return; end
 
 %% SPECIFICITY
 % Compute the spatial specificity of the map, based on the formula proposed by Skaggs et al. (1993).
-T = sum(sum(map.time));
-if T == 0
-  stats.specificity = 0;
-else
-  occupancy = map.time/(T+eps);
-  m = sum(sum(map.count))/(sum(sum(map.time)+eps));
-  if m == 0
-    stats.specificity = 0;
-  else
-    logArg = map.count/m;
-    logArg(logArg <= 1) = 1;
+if ~any(any(isnan(map.time)))
+    T = sum(sum(map.time));
+    if T == 0
+      stats.specificity = 0;
+    else
+      occupancy = map.time/(T+eps);
+      m = sum(sum(map.count))/(sum(sum(map.time)+eps));
+      if m == 0
+        stats.specificity = 0;
+      else
+        logArg = map.count/m;
+        logArg(logArg <= 1) = 1;
 
-%      stats.specificity = sum(sum(map.count.smooth.*log2(logArg).*occupancy))/m;
-    stats.specificity = sum(sum(map.count.*log2(logArg).*occupancy))/m;
-  end
+    %      stats.specificity = sum(sum(map.count.smooth.*log2(logArg).*occupancy))/m;
+        stats.specificity = sum(sum(map.count.*log2(logArg).*occupancy))/m;
+      end
+    end
+else
+    T = nansum(nansum(map.time));
+    if T == 0
+        stats.specificity = 0;
+    else
+        occupancy = map.time/(T+eps);
+        m = nansum(nansum(map.count))/(nansum(nansum(map.time)+eps));
+        if m == 0
+            stats.specificity = 0;
+        else
+            logArg = map.count/m;
+            logArg(logArg <= 1) = 1;
+            stats.specificity = nansum(nansum(map.count.*log2(logArg).*occupancy))/m;
+        end
+    end
 end
+        
+        
+        
+    
 
 %% FIELD SIZE
 % Determine the field as the connex area around the peak where the value or rate is > threshold*peak
@@ -203,8 +224,9 @@ if max(max(map.z)) == 0,
   return;
 end
 
-nBinsX = max([1 length(map.x)]);	% minimum number of bins is 1
-nBinsY = max([1 length(map.y)]);
+
+% nBinsX = max([1 length(map.x)]);	% minimum number of bins is 1
+% nBinsY = max([1 length(map.y)]);
 
 % Each time we find a field, we will remove it from the map; make a copy first
 z = map.z;
@@ -281,6 +303,12 @@ stats.spatialCorr.spatialCorrelation = spatialCorrelation;
 stats.spatialCorr.valor_r = valor_r;
 stats.spatialCorr.valor_p = valor_p;
 stats.spatialCorr.sc = sc;
+
+[valor_r,valor_p] = corr_esp_rectangleVs(map.zUnSmooth,map.timeUnSmooth,0.2);
+stats.spatialCoherencev2.valor_r = valor_r;
+stats.spatialCoherencev2.valor_p = valor_p;
+stats.spatialCoherencev2.sc_a = valor_r(1,2);
+stats.spatialCoherencev2.sc_pa = valor_p(1,2);
 
 % B=[0.0025 0.0125 0.0200 0.0125 0.0025;
 %     0.0125 0.0625 0.1000 0.0625 0.0125;

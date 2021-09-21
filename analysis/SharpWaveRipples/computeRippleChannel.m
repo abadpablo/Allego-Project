@@ -245,7 +245,7 @@ for shk=1:length(SHANKS)
         for i = 1:size(ripples.peaks,1)
             ripple_ave(i,:) = eeg(round(ripples.peaks(i)*LfpSamplingrate)-Win:round(ripples.peaks(i)*LfpSamplingrate)+Win,:);
         end
-
+        
         All_Ripple_Avg=double(mean(ripple_ave));
 
         Frq=120:180;

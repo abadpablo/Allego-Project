@@ -50,7 +50,8 @@ function [firingMaps] = bz_firingMapAvg(positions,spikes,varargin)
 %% parse inputs
 p=inputParser;
 addParameter(p,'basepath',pwd,@isstr);
-addParameter(p,'smooth',2,@isnumeric);
+addParameter(p,'smooth_buz',2,@isnumeric);
+addParameter(p,'smooth_tint',7,@isnumeric);
 addParameter(p,'speedThresh',0.1,@isnumeric);
 addParameter(p,'nBins',50,@isnumeric);
 addParameter(p,'maxGap',0.1,@isnumeric);
@@ -65,11 +66,12 @@ addParameter(p,'cmBin',2.5,@isnumeric);
 addParameter(p,'periodicAnalysis',false,@islogical);
 addParameter(p,'numRand',10,@isnumeric);
 addParameter(p,'spikeShuffling',true,@islogical);
-addParameter(p,'buzAnalysis',true,@islogical);
+addParameter(p,'buzAnalysis',false,@islogical);
 addParameter(p,'tintAnalysis',true,@islogical);
 
 parse(p,varargin{:});
-smooth = p.Results.smooth;
+smooth_buz = p.Results.smooth_buz;
+smooth_tint = p.Results.smooth_tint;
 speedThresh = p.Results.speedThresh;
 nBins = p.Results.nBins;
 maxGap = p.Results.maxGap;
@@ -197,11 +199,17 @@ end
 for unit = 1:length(spikes.times)
     for c = 1:conditions
             if buzAnalysis
-                map{unit}{c} = Map(positions{c},spikes.times{unit},'smooth',smooth,'minTime',minTime,...
+                map{unit}{c} = Map(positions{c},spikes.times{unit},'smooth',smooth_buz,'minTime',minTime,...
                     'nBins',nBins{c},'maxGap',maxGap,'mode',mode,'maxDistance',maxDistance);
             elseif tintAnalysis
-                map{unit}{c} = firingMapsBuild(positions{c},spikes.times{unit},'smooth',smooth,'minTime',minTime,...
-                    'nBins',nBins{c},'maxGap',maxGap,'mode',mode,'maxDistance',maxDistance);
+%                 map_tint{unit}{c} = firingMapsBuild(positions{c},spikes.times{unit},'smooth',smooth,'minTime',minTime,...
+%                     'nBins',nBins{c},'maxGap',maxGap,'mode',mode,'maxDistance',maxDistance);
+                [n,bin] = histc(spikes.times{unit},positions{c}(:,1));
+                bin = bin(bin >0);
+                bin = unique(bin);
+                map{unit}{c} = firingMapsBuild_tint(positions{c},bin,'boundingbox',tracking.apparatus{c}.boundingbox,'pixels_metre',tracking.pixelsmetre{c},...
+                    'tracking',tracking,'smooth',smooth_tint,'minTime',minTime,...
+                    'nBins',nBins{c},'maxGap',maxGap,'mode',mode,'maxDistance',maxDistance);                
             end
             
             stats{unit}{c} = MapStats(map{unit}{c},spikes.times{unit},'nBins',nBins{c},'verbose','on');
@@ -239,7 +247,16 @@ catch
    %warning('spikes.region is missing') 
 end
 
-firingMaps.params.smooth = smooth;
+if buzAnalysis
+    firingMaps.params.analysis = 'buzcode';
+    firingMaps.params.smooth = smooth_buz;
+elseif tintAnalysis
+    firingMaps.params.analysis = 'tint';
+    firingMaps.params.smooth = smooth_tint;
+end
+
+% firingMaps.params.smooth_buz = smooth_buz;
+firingMaps.params.smooth_tint = smooth_tint;
 firingMaps.params.minTime = minTime;
 firingMaps.params.nBins = nBins;
 firingMaps.params.maxGap = maxGap;
