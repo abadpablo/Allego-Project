@@ -250,6 +250,8 @@ for shk=1:length(SHANKS)
             ripple_ave = [];
         end
 
+        
+        All_Ripple_Avg=double(mean(ripple_ave));
         if ~isempty(ripple_ave)
             if size(ripple_ave,1) == 1
                 All_Ripple_Avg = ripple_ave;

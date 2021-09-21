@@ -1069,7 +1069,7 @@ end
 try
     disp('Plotting Place Fields')
 %     plot_placeFields(firingMaps,spikes,tracking,cell_metrics);
-    plot_placeFields(firingMaps,spikes,tracking);
+    plot_placeFields('firingMaps',firingMaps,'spikes',spikes,'tracking',tracking,'cell_metrics',cell_metrics);
 catch
     disp('It is not possible to run plot Place Fields')
 end

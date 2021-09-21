@@ -1,14 +1,23 @@
-function plot_placeFields(firingMaps,spikes,tracking,varargin)
+function plot_placeFields(varargin)
 
 p = inputParser;
 addParameter(p,'basepath',pwd,@isstr);
+addParameter(p,'firingMaps',[],@isstruct);
+addParameter(p,'spikes',[],@isstruct);
+addParameter(p,'tracking',[],@isstruct);
+addParameter(p,'cell_metrics',[],@isstruct);
 
 parse(p,varargin{:})
 
 basepath = p.Results.basepath;
+firingMaps = p.Results.firingMaps;
+spikes = p.Results.spikes;
+tracking = p.Results.tracking;
+cell_metrics = p.Results.cell_metrics;
+
+
+
 mkdir('placeFields')
-
-
 conditions = size(tracking.events.subSessions,1);
 
 
@@ -97,12 +106,19 @@ else
             
             subplot(2,4,2)
             %ACG
+            area(cell_metrics.acg.narrow(:,i),'LineStyle','none')
+            title(['Cell type: ' ,num2str(cell_metrics.putativeCellType{i})])
 
             subplot(2,4,3)
             % ISI
-
+            area(cell_metrics.isi.log10(:,i),'LineStyle','none')
+            plot(cell_metrics.isi.log10(:,i))
+            
             subplot(2,4,4)
             % Trilateralization
+            plot(cell_metrics.general.chanCoords.x,cell_metrics.general.chanCoords.y,'.k'), hold on
+            plot(cell_metrics.trilat_x(i),cell_metrics.trilat_y(i),'ob'), xlabel('x position (µm)'), ylabel('y position (µm)')
+            
             
             subplot(2,4,5)
             [n,bin] = histc(spikes.times{i}(spikes.times{i} > tracking.events.subSessions(j,1) & spikes.times{i} < tracking.events.subSessions(j,2)),tracking.timestamps(tracking.events.subSessionsMask == j));
@@ -117,27 +133,48 @@ else
             
             subplot(2,4,6)
             % Occupancy
-            imagesc(firingMaps.occupancy{i}{j});
-            colormap(jet(15)),colorbar, shading flat
-            view(0,-90)
-            title('occupancy')
-            set(gca,'DataAspectRatio',[1 1 1]);
+            if strcmpi(firingMaps.params.analysis,'tint')
+                imagesc(firingMaps.occupancy{i}{j});
+                colormap(jet(15)),colorbar, shading flat
+                title('occupancy')
+                set(gca,'DataAspectRatio',[1 1 1]);
+            elseif strcmpi(firingMaps.params.analysis,'buzcode')
+                imagesc(firingMaps.occupancy{i}{j});
+                colormap(jet(15)),colorbar, shading flat
+                view(0,-90)
+                title('occupancy')
+                set(gca,'DataAspectRatio',[1 1 1]);
+            end
             
             subplot(2,4,7)
             %count
-            imagesc(firingMaps.countMaps{i}{j});
-            colormap(jet(15)), colorbar, shading flat
-            title('count')
-            view(0,-90)
-            set(gca,'DataAspectRatio',[1 1 1]); 
+            if strcmpi(firingMaps.params.analysis,'tint')
+                imagesc(firingMaps.countMaps{i}{j});
+                colormap(jet(15)), colorbar, shading flat
+                title('count')
+                set(gca,'DataAspectRatio',[1 1 1]); 
+            elseif strcpi(firingMaps.params.analysis,'buzcode')
+                imagesc(firingMaps.countMaps{i}{j});
+                colormap(jet(15)), colorbar, shading flat
+                title('count')
+                view(0,-90)
+                set(gca,'DataAspectRatio',[1 1 1]);
+            end
             
             subplot(2,4,8)
             % rateMap
-            imagesc(firingMaps.rateMaps{i}{j});
-            colormap(jet(15)), colorbar, shading flat
-            title('ratemap')
-            view(0,-90)
-            set(gca,'DataAspectRatio',[1 1 1]); 
+            if strcmpi(firingMaps.params.analysis,'tint')
+                imagesc(firingMaps.rateMaps{i}{j});
+                colormap(jet(15)), colorbar, shading flat
+                title('ratemap')
+                set(gca,'DataAspectRatio',[1 1 1]); 
+            elseif strcmpi(firingMaps.params.analysis,'buzcode')
+                imagesc(firingMaps.rateMaps{i}{j});
+                colormap(jet(15)), colorbar, shading flat
+                title('ratemap')
+                view(0,-90)
+                set(gca,'DataAspectRatio',[1 1 1]); 
+            end
             
             saveas(gcf,['placeFields\placeFields_Cell',num2str(i),'folder',tracking.folders{j},'.png']);
         

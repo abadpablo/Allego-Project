@@ -111,21 +111,20 @@ for ii=1:length(MergePoints.foldernames)
             end
             cd (basepath)
             
-        elseif strcmpi(tracking.apparatus{count1}.name,'Open Field')
-            count = count+1;
-            cd(tracking.folders{count1})
-            digitalIn = bz_getDigitalIn('all');
-            tracking_subfolder = getSessionTracking();
-            try
-                fprintf('Computing Open Field Performance in %s folder \n', tracking.folders{count1});
-                tempPerformance{count} = performanceOpenField('digitalIn', digitalIn, 'tracking', tracking_subfolder);
-                performanceFolder(count) = ii;
-                
-                
-            catch
-                
-                
-            end
+%         elseif strcmpi(tracking.apparatus{count1}.name,'Open Field')
+%             count = count+1;
+%             cd(tracking.folders{count1})
+%             digitalIn = bz_getDigitalIn('all');
+%             tracking_subfolder = getSessionTracking();
+%             try
+%                 fprintf('Computing Open Field Performance in %s folder \n', tracking.folders{count1});
+%                 tempPerformance{count} = performanceOpenField('digitalIn', digitalIn, 'tracking', tracking_subfolder);
+%                 performanceFolder(count) = ii;
+%             catch
+% 
+%             end
+%             
+%             cd(basepath)
             
 
         end
@@ -148,51 +147,54 @@ times_stemArm = [];
 times_rightArm = [];
 times_leftArm = [];
 
+
 for ii=1:length(performanceFolder)
     if strcmpi(MergePoints.foldernames{performanceFolder(ii)},tempPerformance{ii}.folder)
-        sumTs{ii} = tempPerformance{ii}.timestamps + MergePoints.timestamps(performanceFolder(ii),1);
-        sumTs_transitions{ii} = tempPerformance{ii}.transitions_times_out_nonzero + MergePoints.timestamps(performanceFolder(ii),1);
-        sumTs_transitions_zero{ii} = tempPerformance{ii}.transitions_times_out + MergePoints.timestamps(performanceFolder(ii),1);
-        subSessions = [subSessions; MergePoints.timestamps(performanceFolder(ii),1:2)];
-        maskSessions = [maskSessions; ones(size(sumTs{ii}))*ii];
-        ts_stemArm{ii} = tempPerformance{ii}.times_stem' + MergePoints.timestamps(performanceFolder(ii),1);
-        ts_leftArm{ii} = tempPerformance{ii}.times_left' + MergePoints.timestamps(performanceFolder(ii),1);
-        ts_rightArm{ii} = tempPerformance{ii}.times_right' + MergePoints.timestamps(performanceFolder(ii),1);
+        if strcmpi(tempPerformance{ii}.paradigm,'YMaze') 
+            sumTs{ii} = tempPerformance{ii}.timestamps + MergePoints.timestamps(performanceFolder(ii),1);
+            sumTs_transitions{ii} = tempPerformance{ii}.transitions_times_out_nonzero + MergePoints.timestamps(performanceFolder(ii),1);
+            sumTs_transitions_zero{ii} = tempPerformance{ii}.transitions_times_out + MergePoints.timestamps(performanceFolder(ii),1);
+            subSessions = [subSessions; MergePoints.timestamps(performanceFolder(ii),1:2)];
+            maskSessions = [maskSessions; ones(size(sumTs{ii}))*ii];
+            ts_stemArm{ii} = tempPerformance{ii}.times_stem' + MergePoints.timestamps(performanceFolder(ii),1);
+            ts_leftArm{ii} = tempPerformance{ii}.times_left' + MergePoints.timestamps(performanceFolder(ii),1);
+            ts_rightArm{ii} = tempPerformance{ii}.times_right' + MergePoints.timestamps(performanceFolder(ii),1);
 
 
-        ts = [ts, sumTs{ii}'];
-        ts_transitions = [ts_transitions; sumTs_transitions{ii}'];
-        ts_transitions_zero = [ts_transitions_zero; sumTs_transitions_zero{ii}'];
-        times_stemArm = [times_stemArm; ts_stemArm{ii}'];
-        times_leftArm = [times_leftArm; ts_leftArm{ii}'];
-        times_rightArm = [times_rightArm; ts_rightArm{ii}'];
+            ts = [ts, sumTs{ii}'];
+            ts_transitions = [ts_transitions; sumTs_transitions{ii}'];
+            ts_transitions_zero = [ts_transitions_zero; sumTs_transitions_zero{ii}'];
+            times_stemArm = [times_stemArm; ts_stemArm{ii}'];
+            times_leftArm = [times_leftArm; ts_leftArm{ii}'];
+            times_rightArm = [times_rightArm; ts_rightArm{ii}'];
 
-        for i=1:tempPerformance{ii}.sampleVSchoice.group1.trials
-            group1_sample{ii}{i} = tempPerformance{ii}.sampleVSchoice.group1.sample{i}(3,:) + MergePoints.timestamps(performanceFolder(ii),1);
-            group1_choice{ii}{i} = tempPerformance{ii}.sampleVSchoice.group1.choice{i}(3,:) + MergePoints.timestamps(performanceFolder(ii),1);
-        end
+            for i=1:tempPerformance{ii}.sampleVSchoice.group1.trials
+                group1_sample{ii}{i} = tempPerformance{ii}.sampleVSchoice.group1.sample{i}(3,:) + MergePoints.timestamps(performanceFolder(ii),1);
+                group1_choice{ii}{i} = tempPerformance{ii}.sampleVSchoice.group1.choice{i}(3,:) + MergePoints.timestamps(performanceFolder(ii),1);
+            end
 
-        for i=1:tempPerformance{ii}.sampleVSchoice.group2.trials
-            group2_sample{ii}{i} = tempPerformance{ii}.sampleVSchoice.group2.sample{i}(3,:) + MergePoints.timestamps(performanceFolder(ii),1);
-            group2_choice{ii}{i} = tempPerformance{ii}.sampleVSchoice.group2.choice{i}(3,:) + MergePoints.timestamps(performanceFolder(ii),1);
-        end
+            for i=1:tempPerformance{ii}.sampleVSchoice.group2.trials
+                group2_sample{ii}{i} = tempPerformance{ii}.sampleVSchoice.group2.sample{i}(3,:) + MergePoints.timestamps(performanceFolder(ii),1);
+                group2_choice{ii}{i} = tempPerformance{ii}.sampleVSchoice.group2.choice{i}(3,:) + MergePoints.timestamps(performanceFolder(ii),1);
+            end
 
-        for i=1:tempPerformance{ii}.sampleVSchoice.group3.trials
-            group3_sample{ii}{i} = tempPerformance{ii}.sampleVSchoice.group3.sample{i}(3,:) + MergePoints.timestamps(performanceFolder(ii),1);
-            group3_choice{ii}{i} = tempPerformance{ii}.sampleVSchoice.group3.choice{i}(3,:) + MergePoints.timestamps(performanceFolder(ii),1);
-        end
+            for i=1:tempPerformance{ii}.sampleVSchoice.group3.trials
+                group3_sample{ii}{i} = tempPerformance{ii}.sampleVSchoice.group3.sample{i}(3,:) + MergePoints.timestamps(performanceFolder(ii),1);
+                group3_choice{ii}{i} = tempPerformance{ii}.sampleVSchoice.group3.choice{i}(3,:) + MergePoints.timestamps(performanceFolder(ii),1);
+            end
 
-        for i=1:tempPerformance{ii}.sampleVSchoice.group4.trials
-            group4_sample{ii}{i} = tempPerformance{ii}.sampleVSchoice.group4.sample{i}(3,:) + MergePoints.timestamps(performanceFolder(ii),1);
-            group4_choice{ii}{i} = tempPerformance{ii}.sampleVSchoice.group4.choice{i}(3,:) + MergePoints.timestamps(performanceFolder(ii),1);
-        end
+            for i=1:tempPerformance{ii}.sampleVSchoice.group4.trials
+                group4_sample{ii}{i} = tempPerformance{ii}.sampleVSchoice.group4.sample{i}(3,:) + MergePoints.timestamps(performanceFolder(ii),1);
+                group4_choice{ii}{i} = tempPerformance{ii}.sampleVSchoice.group4.choice{i}(3,:) + MergePoints.timestamps(performanceFolder(ii),1);
+            end
 
-        for i=1:length(tempPerformance{ii}.right_times)
-            ts_right{ii}{i} = tempPerformance{ii}.right_times{i} + MergePoints.timestamps(performanceFolder(ii),1);
-        end
+            for i=1:length(tempPerformance{ii}.right_times)
+                ts_right{ii}{i} = tempPerformance{ii}.right_times{i} + MergePoints.timestamps(performanceFolder(ii),1);
+            end
 
-        for i = 1:length(tempPerformance{ii}.wrong_times)
-            ts_wrong{ii}{i} = tempPerformance{ii}.wrong_times{i} + MergePoints.timestamps(performanceFolder(ii),1);
+            for i = 1:length(tempPerformance{ii}.wrong_times)
+                ts_wrong{ii}{i} = tempPerformance{ii}.wrong_times{i} + MergePoints.timestamps(performanceFolder(ii),1);
+            end
         end
     end
 end
@@ -241,60 +243,63 @@ folder = [];
 paradigm = [];
 
 for ii=1:size(tempPerformance,2)
-    score = [score; tempPerformance{ii}.performance];
+    if strcmpi(tempPerformance{ii}.paradigm,'YMaze') 
+        score = [score; tempPerformance{ii}.performance];
 
-    transitions_out_nonzero{ii} = [tempPerformance{ii}.transitions_out_nonzero];
-    transitions_fr_out_nonzero{ii} = tempPerformance{ii}.transitions_fr_out_nonzero;
+        transitions_out_nonzero{ii} = [tempPerformance{ii}.transitions_out_nonzero];
+        transitions_fr_out_nonzero{ii} = tempPerformance{ii}.transitions_fr_out_nonzero;
 
-    right_transitions_epoch{ii} = tempPerformance{ii}.right_transitions_epoch;
-    right_transitions_fr{ii} = tempPerformance{ii}.right_transitions_fr;
+        right_transitions_epoch{ii} = tempPerformance{ii}.right_transitions_epoch;
+        right_transitions_fr{ii} = tempPerformance{ii}.right_transitions_fr;
 
-    wrong_transitions_epoch{ii} = tempPerformance{ii}.wrong_transitions_epoch;
-    wrong_transitions_fr{ii} = tempPerformance{ii}.wrong_transitions_fr;
+        wrong_transitions_epoch{ii} = tempPerformance{ii}.wrong_transitions_epoch;
+        wrong_transitions_fr{ii} = tempPerformance{ii}.wrong_transitions_fr;
 
-    entrances{ii} = tempPerformance{ii}.entrances;
+        entrances{ii} = tempPerformance{ii}.entrances;
 
-    transitions_out{ii} = tempPerformance{ii}.transitions_out;
-    transitions_fr_out{ii} = tempPerformance{ii}.transitions_fr_out;
+        transitions_out{ii} = tempPerformance{ii}.transitions_out;
+        transitions_fr_out{ii} = tempPerformance{ii}.transitions_fr_out;
 
-    frames_stem{ii} = tempPerformance{ii}.frames_stem;
-    frames_right{ii} = tempPerformance{ii}.frames_right;
-    frames_left{ii} = tempPerformance{ii}.frames_left;
+        frames_stem{ii} = tempPerformance{ii}.frames_stem;
+        frames_right{ii} = tempPerformance{ii}.frames_right;
+        frames_left{ii} = tempPerformance{ii}.frames_left;
 
-    ballistic{ii} = tempPerformance{ii}.ballistic;
-    doubted{ii} = tempPerformance{ii}.doubted;
-    ballistic_perc{ii} = tempPerformance{ii}.ballistic_perc;
-    doubted_perc{ii} = tempPerformance{ii}.doubted_perc;
-    times{ii} = tempPerformance{ii}.times;
+        ballistic{ii} = tempPerformance{ii}.ballistic;
+        doubted{ii} = tempPerformance{ii}.doubted;
+        ballistic_perc{ii} = tempPerformance{ii}.ballistic_perc;
+        doubted_perc{ii} = tempPerformance{ii}.doubted_perc;
+        times{ii} = tempPerformance{ii}.times;
 
-    right_epoch{ii} = tempPerformance{ii}.right_epoch;
-    right_fr{ii} = tempPerformance{ii}.right_fr;
-    wrong_epoch{ii} = tempPerformance{ii}.wrong_epoch;
-    wrong_fr{ii} = tempPerformance{ii}.wrong_fr;
-    rightTriades{ii} = tempPerformance{ii}.rightTriades;
-    wrongTriades{ii} = tempPerformance{ii}.wrongTriades;
-    sampleVSchoice{ii} = tempPerformance{ii}.sampleVSchoice;
-    folder{ii} = tempPerformance{ii}.folder;
-    paradigm{ii} = tempPerformance{ii}.paradigm;
-
+        right_epoch{ii} = tempPerformance{ii}.right_epoch;
+        right_fr{ii} = tempPerformance{ii}.right_fr;
+        wrong_epoch{ii} = tempPerformance{ii}.wrong_epoch;
+        wrong_fr{ii} = tempPerformance{ii}.wrong_fr;
+        rightTriades{ii} = tempPerformance{ii}.rightTriades;
+        wrongTriades{ii} = tempPerformance{ii}.wrongTriades;
+        sampleVSchoice{ii} = tempPerformance{ii}.sampleVSchoice;
+        folder{ii} = tempPerformance{ii}.folder;
+        paradigm{ii} = tempPerformance{ii}.paradigm;
+    end
 end
 
 for i=1:length(sampleVSchoice)
-    for j=1:length(sampleVSchoice{i}.group1.sample)
-        sampleVSchoice{i}.group1.sample{j}(3,:) = group1_sample{i}{j};
-        sampleVSchoice{i}.group1.choice{j}(3,:) = group1_choice{i}{j};
-    end
-    for j=1:length(sampleVSchoice{i}.group2.sample)
-        sampleVSchoice{i}.group2.sample{j}(3,:) = group2_sample{i}{j};
-        sampleVSchoice{i}.group2.choice{j}(3,:) = group2_choice{i}{j};
-    end
-    for j=1:length(sampleVSchoice{i}.group3.sample)
-        sampleVSchoice{i}.group3.sample{j}(3,:) = group3_sample{i}{j};
-        sampleVSchoice{i}.group3.choice{j}(3,:) = group3_choice{i}{j};
-    end
-    for j=1:length(sampleVSchoice{i}.group4.sample)
-        sampleVSchoice{i}.group4.sample{j}(3,:) = group4_sample{i}{j};
-        sampleVSchoice{i}.group4.choice{j}(3,:) = group4_choice{i}{j};
+    if ~isempty(sampleVSchoice{i})
+        for j=1:length(sampleVSchoice{i}.group1.sample)
+            sampleVSchoice{i}.group1.sample{j}(3,:) = group1_sample{i}{j};
+            sampleVSchoice{i}.group1.choice{j}(3,:) = group1_choice{i}{j};
+        end
+        for j=1:length(sampleVSchoice{i}.group2.sample)
+            sampleVSchoice{i}.group2.sample{j}(3,:) = group2_sample{i}{j};
+            sampleVSchoice{i}.group2.choice{j}(3,:) = group2_choice{i}{j};
+        end
+        for j=1:length(sampleVSchoice{i}.group3.sample)
+            sampleVSchoice{i}.group3.sample{j}(3,:) = group3_sample{i}{j};
+            sampleVSchoice{i}.group3.choice{j}(3,:) = group3_choice{i}{j};
+        end
+        for j=1:length(sampleVSchoice{i}.group4.sample)
+            sampleVSchoice{i}.group4.sample{j}(3,:) = group4_sample{i}{j};
+            sampleVSchoice{i}.group4.choice{j}(3,:) = group4_choice{i}{j};
+        end
     end
 end
 
@@ -306,44 +311,46 @@ right = [];
 wrong = [];
 
 for ii=1:size(tempPerformance,2)
+    if strcmpi(tempPerformance{ii}.paradigm,'YMaze')
+    
+        % Group1
+        for i=1:tempPerformance{ii}.sampleVSchoice.group1.trials
 
-    % Group1
-    for i=1:tempPerformance{ii}.sampleVSchoice.group1.trials
+            right_sample_timestamp = sampleVSchoice{ii}.group1.sample{i}(3,2);
+            right_choice_timestamp = sampleVSchoice{ii}.group1.choice{i}(3,2);        
+            r = [r; right_sample_timestamp; right_choice_timestamp]; 
+        end
 
-        right_sample_timestamp = sampleVSchoice{ii}.group1.sample{i}(3,2);
-        right_choice_timestamp = sampleVSchoice{ii}.group1.choice{i}(3,2);        
-        r = [r; right_sample_timestamp; right_choice_timestamp]; 
+        % Group2
+        for i=1:tempPerformance{ii}.sampleVSchoice.group2.trials
+            right_choice_timestamp = sampleVSchoice{ii}.group2.choice{i}(3,2);
+            r = [r; right_choice_timestamp];
+
+            wrong_sample_timestamp = sampleVSchoice{ii}.group2.sample{i}(3,2);
+            w = [w; wrong_sample_timestamp];
+        end
+
+        % Group3
+        for i=1:tempPerformance{ii}.sampleVSchoice.group3.trials
+            right_sample_timestamp = sampleVSchoice{ii}.group3.sample{i}(3,2);
+            r = [r; right_sample_timestamp];
+
+            wrong_choice_timestamp = sampleVSchoice{ii}.group3.choice{i}(3,2);
+            w = [w; wrong_choice_timestamp];
+
+        end
+
+        % Group4
+        for i=1:tempPerformance{ii}.sampleVSchoice.group4.trials
+
+            wrong_sample_timestamp = sampleVSchoice{ii}.group4.sample{i}(3,2);
+            wrong_choice_timestamp = sampleVSchoice{ii}.group4.choice{i}(3,2);        
+            w = [w; wrong_sample_timestamp; wrong_choice_timestamp]; 
+        end
+
+        right{ii}.timestamps = unique(r);
+        wrong{ii}.timestamps = unique(w);
     end
-
-    % Group2
-    for i=1:tempPerformance{ii}.sampleVSchoice.group2.trials
-        right_choice_timestamp = sampleVSchoice{ii}.group2.choice{i}(3,2);
-        r = [r; right_choice_timestamp];
-
-        wrong_sample_timestamp = sampleVSchoice{ii}.group2.sample{i}(3,2);
-        w = [w; wrong_sample_timestamp];
-    end
-
-    % Group3
-    for i=1:tempPerformance{ii}.sampleVSchoice.group3.trials
-        right_sample_timestamp = sampleVSchoice{ii}.group3.sample{i}(3,2);
-        r = [r; right_sample_timestamp];
-
-        wrong_choice_timestamp = sampleVSchoice{ii}.group3.choice{i}(3,2);
-        w = [w; wrong_choice_timestamp];
-
-    end
-
-    % Group4
-    for i=1:tempPerformance{ii}.sampleVSchoice.group4.trials
-
-        wrong_sample_timestamp = sampleVSchoice{ii}.group4.sample{i}(3,2);
-        wrong_choice_timestamp = sampleVSchoice{ii}.group4.choice{i}(3,2);        
-        w = [w; wrong_sample_timestamp; wrong_choice_timestamp]; 
-    end
-
-    right{ii}.timestamps = unique(r);
-    wrong{ii}.timestamps = unique(w);
 end
 
 
