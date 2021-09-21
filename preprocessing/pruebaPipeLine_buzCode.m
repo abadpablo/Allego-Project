@@ -122,13 +122,12 @@ bpath = 'F:\data\HPS23\HPS23_030621_sess14';
 bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[]);
 
 
-<<<<<<< HEAD
+% HEAD
 %% HPS23 090621 Prueba para SubSessions
 bpath = 'G:\HPS23\HPS23_090621_sess9';
 bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'diffLFPS',true,'analyzeSubSessions',true,'exclude',{'spikes','ripples','thetaModulation'});
 
 
-=======
 %%
 
 changeFilesName_notTrackingAllFiles('H:\data\HPS25\HPS25_050721');
@@ -143,6 +142,12 @@ bpath = 'H:\data\HPS25\HPS25_050721_sess1';
 bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[]);
 
 
-%% Social Interaction
->>>>>>> fcd6863a01f62244c8077de128727d7deef5e3e3
+%% HPS25 - Drugs
+bpath = 'F:\data\HPS25\HPS25_240621_sess2';
+bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[]);
 
+bpath = 'F:\data\HPS25\HPS25_280621_sess3';
+bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[]);
+
+bpath = 'F:\data\HPS25\HPS25_050721_sess4';
+bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[]);
