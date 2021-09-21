@@ -272,7 +272,7 @@ if any(ismember(listOfAnalysis,'ripples'))
                         ripples{ii}.maps = [];
                         ripples{ii}.data = [];
                         ripples{ii}.stats = [];
-                        ripples{ii}.foldername = [];
+                        ripples{ii}.foldername = foldername;
                     end
                 end
                 save(fullfile(basepath, [sessionInfo.session.name, '.ripples.SubSession.events.mat']),'ripples')

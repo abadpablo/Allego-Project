@@ -251,7 +251,12 @@ for shk=1:length(SHANKS)
         end
 
         if ~isempty(ripple_ave)
-            All_Ripple_Avg=double(mean(ripple_ave));
+            if size(ripple_ave,1) == 1
+                All_Ripple_Avg = ripple_ave;
+            else
+                All_Ripple_Avg=double(mean(ripple_ave));
+            end
+                
 
             Frq=120:180;
             scale=frq2scal(Frq,LfpSamplingrate);
@@ -264,9 +269,6 @@ for shk=1:length(SHANKS)
             Ripples_Power_Matrix{1,shk}(CH,:)=Power;
             Ripples_CSD{1,shk}(CH,:)=[sum(diff(smooth1D(All_Ripple_Avg(50:70),10),2)) sum(diff(smooth1D(All_Ripple_Avg(70:100),10),2)) SHANKS{1,shk}(CH) ];
         end
-        
-        
-        
     end
 end
 
@@ -353,23 +355,23 @@ if ~isempty(Ripples_CSD)
             if SHANKS{1,shk}(CH)==Rip_chnl
                 channelname='Ripple';
                 plot(Ripple_X,Ripple_Y,'color','r','linewidth',1,'LineStyle','-.');
-                text(Ripple_X(end)-20,Ripple_Y(1)+2*Sh_spacing,channelname,'color','r','fontsize',10)
+                text(Ripple_X(end)-20,double(Ripple_Y(1)+2*Sh_spacing),channelname,'color','r','fontsize',10)
             elseif SHANKS{1,shk}(CH)==SWR_chnl
                 channelname='SWR';
                 plot(Ripple_X,Ripple_Y,'color','r','linewidth',1,'LineStyle','-.');
-                text(Ripple_X(end),Ripple_Y(1)+2*Sh_spacing,channelname,'color','r','fontsize',10)
+                text(Ripple_X(end),double(Ripple_Y(1)+2*Sh_spacing),channelname,'color','r','fontsize',10)
             elseif SHANKS{1,shk}(CH)==noise_chnl
                 channelname='noise';
                 plot(Ripple_X,Ripple_Y,'color','r','linewidth',1,'LineStyle','-.');
-                text(Ripple_X(end),Ripple_Y(1)+2*Sh_spacing,channelname,'color','r','fontsize',10)
+                text(Ripple_X(end),double(Ripple_Y(1)+2*Sh_spacing),channelname,'color','r','fontsize',10)
             end
 
             %Type channel number and deep sup
             %##################################################################
             if SD <0
-            text(Ripple_X(1)-30,Ripple_Y(1)+2*Sh_spacing,['Sup' num2str([SHANKS{1,shk}(CH)])])
+            text(Ripple_X(1)-30,double(Ripple_Y(1)+2*Sh_spacing),['Sup' num2str([SHANKS{1,shk}(CH)])])
             else
-            text(Ripple_X(1)-30,Ripple_Y(1)+2*Sh_spacing,['Deep' num2str([SHANKS{1,shk}(CH)])])
+            text(Ripple_X(1)-30,double(Ripple_Y(1)+2*Sh_spacing),['Deep' num2str([SHANKS{1,shk}(CH)])])
             end
             %Type test number #################################################
             hold on
