@@ -198,7 +198,7 @@ if showFig
                     set(gca,'YTIck',[])
                 end
                 title(['MI = ' num2str(MI{shanks(jj).Channels(ii)+1}), ' Ch:', num2str(shanks(jj).Channels(ii)+1)])
-                count = count + size(shanks,2)
+                count = count + size(shanks,2);
             end
         end
         
@@ -213,58 +213,62 @@ if showFig
 end
 
 
+mi = MI;
+GMI = [];
+GMI.MI = mi;
+GMI.MeanAmp = MeanAmp;
+
+clear MI
+clear MeanAmp
+
 %% Compute MI and Comodulogram ModIndex_v2
 
-PhaseFreqVector = 2:2:50;
-AmpFreqVector = 10:5:200;
-PhaseFreq_BandWidth = 4;
-AmpFreq_BandWidth = 20;
+PhaseFreqVector = phaserange(1):2:phaserange(2);
+AmpFreqVector = amprange(1):5:amprange(2);
+PhaseFreq_BandWidth = 2;
+AmpFreq_BandWidth = 5;
 
 
 % Fitering and Hilbert Transform
-for j=1:length(filtered_amp.channels)
-    Comodulogram{ii} = single(zeros(length(PhaseFreqVector),length(AmpFreqVector)));
-    AmpFreqTransformed{ii} = zeros(length(AmpFreqVector), size(lfp.data,1));
-    PhaseFreqTransformed{ii} = zeros(length(PhaseFreqVector),size(lfp.data,1));
+
+for jj=1:length(PhaseFreqVector)
+    Pf1 = PhaseFreqVector(jj);
+    Pf2 = Pf1 + PhaseFreq_BandWidth;
+    PhaseFreq = bz_Filter(lfp,'passband',[Pf1 Pf2],'filter',filterType,'order',filterOrder,'channels',phaseCh);
+    PhaseFreqTransformed{jj} = PhaseFreq.phase; % getting the phase time series
+end
+
+for ii=1:length(AmpFreqVector)
+   Af1 = AmpFreqVector(ii); 
+   Af2 = Af1+AmpFreq_BandWidth; 
+   AmpFreq = bz_Filter(lfp,'passband',[Af1 Af2],'filter',filterType,'order',filterOrder,'channels',phaseCh);
+   AmpFreqTransformed{ii} = AmpFreq.amp;
+end
+
+%% Compute MI and Comodulogram
 
 
-    for ii=1:length(AmpFreqVector)
-       Af1 = AmpFreqVector(ii); 
-       Af2 = Af1+AmpFreq_BandWidth; 
-       AmpFreq = bz_Filter(lfp,'passband',[Af1 Af2],'filter',filterType,'order',filterOrder,'channels',phaseCh);
-       AmpFreqTransformed{j}(ii,:) = AmpFreq.amp(:,j);
-    end
-
-    for jj=1:length(PhaseFreqVector)
-        Pf1 = PhaseFreqVector(jj);
-        Pf2 = Pf1 + PhaseFreq_BandWidth;
-        PhaseFreq = bz_Filter(lfp,'passband',[Pf1 Pf2],'filter',filterType,'order',filterOrder,'channels',phaseCh);
-        PhaseFreqTransformed{j}(jj, :) = PhaseFreq.phase(:,j); % getting the phase time series
-    end
-
-    %% Compute MI and Comodulogram
-
+for ch = 1:length(PhaseFreq.channels)
     counter1=0;
-    for ii=1:length(PhaseFreqVector)
+    for ii=1:length(PhaseFreqVector)        
     counter1=counter1+1;
 
-        Pf1 = PhaseFreqVector(ii);
-        Pf2 = Pf1+PhaseFreq_BandWidth;
+    Pf1 = PhaseFreqVector(ii);
+    Pf2 = Pf1+PhaseFreq_BandWidth;
 
-        counter2=0;
+    counter2=0;
         for jj=1:length(AmpFreqVector)
         counter2=counter2+1;
-
             Af1 = AmpFreqVector(jj);
             Af2 = Af1+AmpFreq_BandWidth;
-            [MI{j},MeanAmp{j}]=ModIndex_v2(PhaseFreqTransformed{j}(ii, :), AmpFreqTransformed{j}(jj, :), position);
-            Comodulogram{j}(counter1,counter2)=MI{j};
+
+            [MI{ch}{jj},MeanAmp{ch}{jj}]=ModIndex_v2(PhaseFreqTransformed{ii}(:,ch), AmpFreqTransformed{jj}(:,ch), position);
+            Comodulogram{ch}(counter1,counter2)=MI{ch}{jj};
         end
     end
 end
-
-
-%% Plot comodulogram
+    
+%% Plotting Comodulogram
 
 if showFig
     if length(phaseCh) == 1 && length(ampCh) == 1
@@ -272,7 +276,7 @@ if showFig
         figure,
         set(gcf,'Position',get(0,'ScreenSize'))
         clf
-        contourf(PhaseFreqVector+PhaseFreq_BandWidth/2,AmpFreqVector+AmpFreq_BandWidth/2,Comodulogram{j}',30,'lines','none')
+        contourf(PhaseFreqVector+PhaseFreq_BandWidth/2,AmpFreqVector+AmpFreq_BandWidth/2,Comodulogram{1}',30,'lines','none')
         set(gca,'fontsize',14)
         ylabel('Amplitude Frequency (Hz)')
         xlabel('Phase Frequency (Hz)')
@@ -288,12 +292,12 @@ if showFig
     else
         figure,
         set(gcf,'Position',get(0,'ScreenSize'))
-        for jj=1:length(shanks,2)
+        for jj=1:size(shanks,2)
             count = jj;
             for ii=1:length(shanks(jj).Channels)
                 subplot(sessionInfo.nChannels/sessionInfo.nElecGps,sessionInfo.nChannels/sessionInfo.nElecGps,count)
                 contourf(PhaseFreqVector+PhaseFreq_BandWidth/2,AmpFreqVector+AmpFreq_BandWidth/2,Comodulogram{shanks(jj).Channels(ii)+1}',30,'lines','none')
-                set(gca,'fontsize',14)
+%                 set(gca,'fontsize',14)
                 colormap(jet)
                 colorbar
                 if jj==1 && ii ~= length(shanks(jj).Channels)
@@ -312,44 +316,37 @@ if showFig
                 title(['Comodulogram Ch:', num2str(shanks(jj).Channels(ii)+1)])
                 count = count + size(shanks,2);
             end
-        end
-                
-                                
+        end             
     end
-    
 end
-
 
 %% Save matlab structure
-mi = MI;
-MI = [];
-MI.MI = mi;
-MI.MeanAmp = MeanAmp;
-if ~isempty(foldername)
-    MI.foldername = foldername;
-end
-MI.Channels.phaseCh = phaseCh;
-MI.Channels.ampCh = ampCh;
 
-MI.Comodulogram = Comodulogram;
-MI.PhaseFreqVector = PhaseFreqVector;
-MI.PhaseFreq_BandWidth = PhaseFreq_BandWidth;
-MI.AmpFreqVector = AmpFreqVector;
-MI.AmpFreq_BandWidth = AmpFreq_BandWidth;
+if ~isempty(foldername)
+    GMI.foldername = foldername;
+end
+GMI.Channels.phaseCh = phaseCh;
+GMI.Channels.ampCh = ampCh;
+
+GMI.Comodulogram = Comodulogram;
+GMI.PhaseFreqVector = PhaseFreqVector;
+GMI.PhaseFreq_BandWidth = PhaseFreq_BandWidth;
+GMI.AmpFreqVector = AmpFreqVector;
+GMI.AmpFreq_BandWidth = AmpFreq_BandWidth;
 
 
 if saveMat
     if ~isempty(folder)
         try
-            save([basepath filesep sessionInfo.FileName, '.', foldername, '.GMI_Tort_', num2str(amprange(1)), num2str(amprange(end)),'.lfp.mat'],'MI')
+            save([basepath filesep sessionInfo.FileName, '.', foldername, '.GMI_Tort_', num2str(amprange(1)), num2str(amprange(end)),'.lfp.mat'],'GMI')
         catch
-            save([basepath filesep sessionInfo.FileName, '.', foldername, '.GMI_Tort_', num2str(amprange(1)), num2str(amprange(end)),'.lfp.mat'],'MI','-v7.3')
+            save([basepath filesep sessionInfo.FileName, '.', foldername, '.GMI_Tort_', num2str(amprange(1)), num2str(amprange(end)),'.lfp.mat'],'GMI','-v7.3')
         end
     else
         try
-           save([basepath filesep sessionInfo.FileName,'.GMI_Tort_', num2str(amprange(1)), num2str(amprange(end)),'.lfp.mat'],'MI') 
+           save([basepath filesep sessionInfo.FileName,'.GMI_Tort_', num2str(amprange(1)), num2str(amprange(end)),'.lfp.mat'],'GMI') 
         catch
-            save([basepath filesep sessionInfo.FileName,'.GMI_Tort_', num2str(amprange(1)), num2str(amprange(end)),'.lfp.mat'],'MI','-v7.3')
+            save([basepath filesep sessionInfo.FileName,'.GMI_Tort_', num2str(amprange(1)), num2str(amprange(end)),'.lfp.mat'],'GMI','-v7.3')
         end
     end
 end
