@@ -9,18 +9,14 @@
 
 % changeFilesName('\\DESKTOP-IORIG9S\data\HPS22\HPS22_130521');
 
-changeFilesName_notTrackingAllFiles('C:\data\HPR21409');
+changeFilesName_notTrackingAllFiles('\\EXPLORER\data2\Project_GLUN3\HPS25\HPS25_240621');
 
 %%
 updateExpFolder('\\DISCOVERY_ONE\Sub\HPS23','F:\data\HPS23');
-arrangeSessionFolder('C:\data\HPR21409');
-bpath= 'C:\data\HPR21409';
+arrangeSessionFolder('F:\data\HPS23');
+bpath= 'F:\data\HPS23';
 createFiles('basepath',bpath);
-
 bpath = 'G:\HPS23\HPS23_040621_sess1';
-bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[],'medianSubstr',false,'runSummary',true);
-
-bpath = 'H:\data\Project_GLUN3\HPS24\HPS24_290621_sess4';
 bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[],'medianSubstr',false,'runSummary',true);
 
 %%
@@ -100,14 +96,14 @@ bpath = 'G:\HPS23\HPS23_040621_sess1';
 bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'diffLFPs',true,'analyzeSubSessions',true,'exclude',{'spikes','ripples','thetaModulation','behaviour','spikeTrain','performance'});
 
 bpath = 'F:\data\HPS23\HPS23_090621_sess9';
-bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'diffLFPs',true,'analyzeSubSessions',true,'exclude',{'spikes','ripples','thetaModulation','behaviour','spikeTrain'});
+bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'diffLFPs',true,'analyzeSubSessions',true,'exclude',{'spikes','ripples'});
 
 
 
 %%
-bpath = 'G:\HPS23\HPS23_040621_sess1';
+bpath = 'F:\data\HPS23\HPS23_010621_sess12';
 bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[]);
-bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'diffLFPs',true,'analyzeSubSessions',false,'exclude',{'spikes','ripples','thetaModulation','behaviour','performance','spikeTrain','excel','CellExplorer'});
+bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'diffLFPs',true,'analyzeSubSessions',false,'exclude',{'spikes','digitalPulses','ripples','tMazeBehaviour','linearMazeBehaviour','YMazeBehaviour','OpenFieldBehaviour','thetaModulation','behaviour','spikeTrain','performance','excel'});
 
 
 bpath = 'F:\data\HPS23\HPS23_300421_sess4';
@@ -118,36 +114,39 @@ bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[]);
 bpath = 'F:\data\HPS23\HPS23_020621_sess13';
 bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[]);
 
-bpath = 'F:\data\HPS23\HPS23_030621_sess14';
+bpath = 'G:\HPS23\HPS23_030621_sess14';
 bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[]);
 
 
-% HEAD
-%% HPS23 090621 Prueba para SubSessions
-bpath = 'G:\HPS23\HPS23_090621_sess9';
-bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'diffLFPS',true,'analyzeSubSessions',true,'exclude',{'spikes','ripples','thetaModulation','behaviour','performance','spikeTrain','CellExplorer'});
 
 
-%%
+%% 
 
-changeFilesName_notTrackingAllFiles('H:\data\HPS25\HPS25_050721');
-changeFilesName_notTrackingAllFiles('H:\data\HPS25\HPS25_280621');
-arrangeSessionFolder('H:\data\HPS25');
-updateExpFolder('\\DISCOVERY_ONE\Sub\HPS23','F:\data\HPS23');
+% changeFilesName_notTrackingAllFiles('\\EXPLORER\data2\Project_GLUN3\HPS24\HPS24_230621');
+% changeFilesName_notTrackingAllFiles('\\EXPLORER\data2\Project_GLUN3\HPS24\HPS24_240621');
 
-bpath= 'H:\data\HPS25';
+
+updateExpFolder('\\EXPLORER\data2\Project_GLUN3\HPS24','F:\data\HPS24');
+arrangeSessionFolder('F:\data\HPS24');
+bpath= 'F:\data\HPS24';
 createFiles('basepath',bpath);
+
+
+updateExpFolder('\\EXPLORER\data2\Project_GLUN3\HPS25','F:\data\HPS25');
+arrangeSessionFolder('F:\data\HPS25');
+bpath= 'F:\data\HPS25';
+createFiles('basepath',bpath);
+
+bpath = 'F:\data\HPS24\HPS24_230621_sess1';
+bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[]);
+
+
+bpath = 'F:\data\HPS25\HPS25_040621_sess2';
+bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[]);
 %%
-bpath = 'H:\data\HPS25\HPS25_050721_sess1';
-bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[]);
+bpath = 'G:\HPS23\HPS23_040621_sess1';
+bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'diffLFPs',true,'analyzeSubSessions',false,'exclude',{'spikes','ripples','thetaModulation','behaviour','performance','spikeTrain','CellExplorer','lfp_analysis'});
 
 
-%% HPS25 - Drugs
-bpath = 'F:\data\HPS25\HPS25_240621_sess2';
-bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[]);
-
-bpath = 'F:\data\HPS25\HPS25_280621_sess3';
-bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[]);
-
-bpath = 'F:\data\HPS25\HPS25_050721_sess4';
-bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[]);
+bpath = 'G:\HPS23\HPS23_090621_sess9';
+bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'diffLFPs',false,'analyzeSubSessions',true,'exclude',{'spikes','ripples'});

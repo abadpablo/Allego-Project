@@ -6,6 +6,7 @@ addParameter(p,'firingMaps',[],@isstruct);
 addParameter(p,'spikes',[],@isstruct);
 addParameter(p,'tracking',[],@isstruct);
 addParameter(p,'cell_metrics',[],@isstruct);
+addParameter(p,'spikeTrain',[],@isstruct);
 
 parse(p,varargin{:})
 
@@ -14,7 +15,7 @@ firingMaps = p.Results.firingMaps;
 spikes = p.Results.spikes;
 tracking = p.Results.tracking;
 cell_metrics = p.Results.cell_metrics;
-
+spikeTrain = p.Results.spikeTrain;
 
 
 mkdir('placeFields')
@@ -102,7 +103,7 @@ else
             set(gcf,'Position',get(0,'ScreenSize'))
             subplot(2,4,1)
             plot(spikes.filtWaveform{i})
-            title(['Cell:' , num2str(i), ' Shank:' ,num2str(spikes.shankID(i))])
+            title(['Cell:' , num2str(i), '  MeanFr: ' , num2str(firingMaps.stats{i}{j}.meanFr)])
             
             subplot(2,4,2)
             %ACG
@@ -118,7 +119,7 @@ else
             % Trilateralization
             plot(cell_metrics.general.chanCoords.x,cell_metrics.general.chanCoords.y,'.k'), hold on
             plot(cell_metrics.trilat_x(i),cell_metrics.trilat_y(i),'ob'), xlabel('x position (µm)'), ylabel('y position (µm)')
-            
+            title([ ' Shank:' ,num2str(spikes.shankID(i)),])
             
             subplot(2,4,5)
             [n,bin] = histc(spikes.times{i}(spikes.times{i} > tracking.events.subSessions(j,1) & spikes.times{i} < tracking.events.subSessions(j,2)),tracking.timestamps(tracking.events.subSessionsMask == j));

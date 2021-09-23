@@ -108,7 +108,7 @@ switch lower(method)
         %             lfpphase(i) = phase(i,mIdx(i));
         %         end
         %         lfpphase = mod(lfpphase,2*pi);
-        [wave,f,t,coh,wphases,raw,coi,scale,priod,scalef]=getWavelet(double(lfp.data(:,1)),samplingRate,passband(1),passband(2),8,0);
+        [wave,f,t,coh,wphases,raw,coi,scale,priod,scalef]=getWavelet(double(lfp.data(:,1)),samplingRate,passband(1),passband(2),8,0,0);
         [~,mIdx]=max(wave);%get index max power for each timepiont
         pIdx=mIdx'+[0;size(f,2).*cumsum(ones(size(t,1)-1,1))];%converting to indices that will pick off single maxamp index from each of the freq-based phases at eacht timepoint
         lfpphase=wphases(pIdx);%get phase of max amplitude wave at each timepoint
