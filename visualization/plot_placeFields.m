@@ -21,6 +21,14 @@ spikeTrain = p.Results.spikeTrain;
 mkdir('placeFields')
 conditions = size(tracking.events.subSessions,1);
 
+%% Need to include only spikeTrain analysis for folders with tracking
+
+for i=1:length(tracking.folders)
+    folder = tracking.folders{i};    
+    spkTrain{i} = spikeTrain.(folder);
+end
+
+
 
 if conditions == 1
 
@@ -103,17 +111,19 @@ else
             set(gcf,'Position',get(0,'ScreenSize'))
             subplot(2,4,1)
             plot(spikes.filtWaveform{i})
-            title(['Cell:' , num2str(i), '  MeanFr: ' , num2str(firingMaps.stats{i}{j}.meanFr)])
+            title(['Cell:' , num2str(i)])
             
             subplot(2,4,2)
             %ACG
             area(cell_metrics.acg.narrow(:,i),'LineStyle','none')
-            title(['Cell type: ' ,num2str(cell_metrics.putativeCellType{i})])
+            title(['Cell type: ', num2str(cell_metrics.putativeCellType{i})])
+            
 
             subplot(2,4,3)
             % ISI
             area(cell_metrics.isi.log10(:,i),'LineStyle','none')
             plot(cell_metrics.isi.log10(:,i))
+            title(['Burst Index: ', num2str(spkTrain{j}{i}.BurstIndex)])
             
             subplot(2,4,4)
             % Trilateralization
@@ -131,6 +141,7 @@ else
             plot(xToPlot(bin(bin>0)),yToPlot(bin(bin>0)),'.','MarkerEdgeColor','r','MarkerSize',15);
             hold off
             set(gca,'DataAspectRatio',[1 1 1]);
+            title(['Mean Firing Rate: ' , num2str(firingMaps.stats{i}{j}.meanFr)])
             
             subplot(2,4,6)
             % Occupancy
@@ -146,6 +157,7 @@ else
                 title('occupancy')
                 set(gca,'DataAspectRatio',[1 1 1]);
             end
+            
             
             subplot(2,4,7)
             %count

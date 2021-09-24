@@ -147,7 +147,6 @@ bz_ConcatenateDats(pwd,0,1);
 % if ~isempty(dir('*digitalIn.mat'))
 %     digitalIn = bz_getDigitalIn('all','fs',session.extracellular.sr); 
 % end
-
 %% Remove stimulation artifacts
 if iscell(cleanArtifacts) || cleanArtifacts
     if iscell(cleanArtifacts)
