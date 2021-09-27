@@ -55,41 +55,42 @@ if ischar('ch') && strcmpi(ch, 'all')
 else
     ch = ch + 1;
 end
-fs = 1250;
+% fs = 1250;
 ts = int32(ts * fs);
 winArt = winArt * fs;
 winDC = winDC * fs;
 
-% disp('Creating .dat back up...');
-% copyfile(strcat(filename,'.dat'),'copy_bin.dat'); % create .dat back up
-% m = memmapfile(fullfile(basepath,strcat(filename,'.dat')),'Format','int16','Writable', true);
-% data=reshape(m.Data,nChannels,[]);
+disp('Creating .dat back up...');
+copyfile(strcat(filename,'.dat'),'copy_bin.dat'); % create .dat back up
+m = memmapfile(fullfile(basepath,strcat(filename,'.dat')),'Format','int16','Writable', true);
+data=reshape(m.Data,nChannels,[]);
 
 % We need to load .lfp file (1250) instead of .dat file (30000)
-lfp = bz_GetLFP([1]);
-lfp.data = lfp.data';
-lfp.timestamps = lfp.timestamps';
-% for hh = ch
-%     fprintf('Channel #%i of %i...\n',hh,length(ch))
-%     for ii = 1:size(ts,2)-1 % tsses
-%         % remove dc
-%         if correctDC
-%             data_(hh,ts(1,ii):ts(2,ii)) = data(hh,ts(1,ii):ts(2,ii)) -...
-%                 median(data(hh,ts(1,ii):ts(1,ii)+winDC)) + ...
-%                 median(data(hh,ts(1,ii)-winDC:ts(1,ii)));
-%             
-%             data(hh,ts(ii):ts(ii+1)) = data(hh,ts(ii):ts(ii+1)) -...
-%                 median(data(hh,ts(ii):ts(ii)+winDC)) + ...
-%                 median(data(hh,ts(ii)-winDC:ts(ii)));
-%         end
-%         % remove artifacts
-%         for jj = 1:size(ts,1)
-%             art = int32([ts(jj,ii) - winArt ts(jj,ii) + winArt]);
-%             data(hh,art(1):art(2))=int16(interp1(double(art),...
-%                 double(data(hh,art)),double(art(1):art(2))));
-%         end
-%     end
-% end
+% lfp = bz_GetLFP([1]);
+% lfp.data = lfp.data';
+% lfp.timestamps = lfp.timestamps';
+
+for hh = ch
+    fprintf('Channel #%i of %i...\n',hh,length(ch))
+    for ii = 1:size(ts,2)-1 % tsses
+        % remove dc
+        if correctDC
+            data_(hh,ts(1,ii):ts(2,ii)) = data(hh,ts(1,ii):ts(2,ii)) -...
+                median(data(hh,ts(1,ii):ts(1,ii)+winDC)) + ...
+                median(data(hh,ts(1,ii)-winDC:ts(1,ii)));
+            
+            data(hh,ts(ii):ts(ii+1)) = data(hh,ts(ii):ts(ii+1)) -...
+                median(data(hh,ts(ii):ts(ii)+winDC)) + ...
+                median(data(hh,ts(ii)-winDC:ts(ii)));
+        end
+        % remove artifacts
+        for jj = 1:size(ts,1)
+            art = int32([ts(jj,ii) - winArt ts(jj,ii) + winArt]);
+            data(hh,art(1):art(2))=int16(interp1(double(art),...
+                double(data(hh,art)),double(art(1):art(2))));
+        end
+    end
+end
 
 d = zeros(2,max([size(ts,2) size(ts,2)]));
 d(1,1:size(ts,2)) = ts;

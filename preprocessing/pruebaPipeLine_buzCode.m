@@ -149,4 +149,22 @@ bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'diffLFPs',true,'a
 
 
 bpath = 'G:\HPS23\HPS23_090621_sess9';
-bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'diffLFPs',false,'analyzeSubSessions',true,'exclude',{'spikes','ripples'});
+bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'diffLFPs',false,'analyzeSubSessions',true,'exclude',{'spikes','ripples','thetaModulation','behaviour'});
+
+
+%% OPTO
+% No cleanArtifacts
+bpath = 'D:\opto\HPR21409\HPR214049_230921_sess3';
+bz_PreprocessSession('basepath',bpath);
+bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'digitalChannelsList',7,'exclude',{'spikes','digitalPulses','ripples','thetaModulation','behaviour','performance','spikeTrain','CellExplorer'});
+
+% Clean Artifacts
+bpath = 'D:\opto\HPR21409\HPR214049_230921_sess4';
+bz_PreprocessSession('basepath',bpath,'cleanArtifacts',{7});
+bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'digitalChannelsList',7,'exclude',{'behaviour','performance','lfp_analysis'});
+
+bpath = 'D:\opto\HPR21409\HPR21409_240921_sess4';
+bz_PreprocessSession('basepath',bpath,'cleanArtifacts',{7});
+bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'digitalChannelsList',7,'exclude',{'behaviour','performance','lfp_analysis','excel'});
+
+

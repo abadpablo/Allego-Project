@@ -43,7 +43,7 @@ addParameter(p,'basepath',pwd,@isfolder); % by default, current folder
 addParameter(p,'analogCh',[],@isnumeric);
 addParameter(p,'stateScore',true,@islogical);
 addParameter(p,'spikeSort',true,@islogical);
-addParameter(p,'getPos',true,@islogical);
+addParameter(p,'getPos',false,@islogical);
 addParameter(p,'cleanArtifacts',false);
 addParameter(p,'medianSubstr',false);
 addParameter(p,'runSummary',false);
@@ -144,24 +144,44 @@ bz_ConcatenateDats(pwd,0,1);
 % if  ~isempty(analogCh)
 %     [pulses] = bz_getAnalogPulses('analogCh',analogCh,'manualThr');
 % end
-% if ~isempty(dir('*digitalIn.mat'))
+% if ~isempty(dir('*digitalIn.events.mat'))
 %     digitalIn = bz_getDigitalIn('all','fs',session.extracellular.sr); 
 % end
+
+%% Get analog and digital pulses
+digitalIn = getDigitalIn('all','fs',session.extracellular.sr);
+
 %% Remove stimulation artifacts
+% if iscell(cleanArtifacts) || cleanArtifacts
+%     if iscell(cleanArtifacts)
+%         pulArtifacts_analog = bz_getAnalogPulses('analogCh',cleanArtifacts{1});
+%         pulArtifacts_dig = [];
+%         for ii = cleanArtifacts{2}
+%             disp(ii);
+%             pulArtifacts_dig = [pulArtifacts_dig; digitalIn.ints{ii}(:)];
+%         end
+%         pulArtifacts = sort([pulArtifacts_analog.timestamps(:); pulArtifacts_dig]);
+%     else
+%         pulArtifacts = pulses.timestamps(:);
+%     end
+%     cleanPulses(pulArtifacts);
+% end
+
+%% Remove stimulation artifacts (only digital artifacts) Modified by Pablo Abad
+
 if iscell(cleanArtifacts) || cleanArtifacts
     if iscell(cleanArtifacts)
-        pulArtifacts_analog = bz_getAnalogPulses('analogCh',cleanArtifacts{1});
         pulArtifacts_dig = [];
-        for ii = cleanArtifacts{2}
+        for ii = cleanArtifacts{1}
             disp(ii);
             pulArtifacts_dig = [pulArtifacts_dig; digitalIn.ints{ii}(:)];
         end
-        pulArtifacts = sort([pulArtifacts_analog.timestamps(:); pulArtifacts_dig]);
-    else
-        pulArtifacts = pulses.timestamps(:);
+        pulArtifacts = sort([pulArtifacts_dig]);
     end
-    cleanPulses(pulArtifacts);
+    cleanDigital(pulArtifacts);
+%     cleanPulses(pulArtifacts);
 end
+
 
 %% Eliminate artifacts from linearTrack or TMaze
 

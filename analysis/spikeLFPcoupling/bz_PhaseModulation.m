@@ -60,6 +60,7 @@ addParameter(p,'plotting',true,@islogical)
 addParameter(p,'numBins',180,@isnumeric)
 addParameter(p,'powerThresh',2,@isnumeric)
 addParameter(p,'saveMat',false,@islogical)
+addParameter(p,'force',false,@islogical);
 
 parse(p,varargin{:})
 
@@ -74,6 +75,7 @@ plotting = p.Results.plotting;
 numBins = p.Results.numBins;
 powerThresh = p.Results.powerThresh;
 saveMat = p.Results.saveMat;
+force = p.Results.force;
 
 filename = dir('*PhaseLockingData.cellinfo.mat*'); 
 if ~isempty(filename) && ~force

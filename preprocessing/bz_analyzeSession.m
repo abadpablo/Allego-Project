@@ -172,7 +172,98 @@ if any(ismember(listOfAnalysis,'spikes'))
     end
 end
 
+%% Digital Pulses
+if any(ismember(listOfAnalysis,'digitalPulses'))
+    try
+        disp('Computing digital Pulses')
+        sessionInfo = bz_getSessionInfo(basepath);
+        digitalIn = getDigitalIn('all');
+        spikes = loadSpikes('getWaveformsFromDat',getWaveformsFromDat,'forceReload',false,'showWaveforms',showWaveforms);
+        if ischar(digitalChannelsList) && strcmpi(digitalChannelsList,'all')
+            digitalChannelsList = 1:length(digitalIn.timestampsOn);
+            digitalChannelsList(1:2) = [];
+        end
+        
+        for mm = 1:length(digitalChannelsList)
+            fprintf('Stimulus %3.i of %3.i \n',mm, length(digitalChannelsList)); %\n
+            st = digitalIn.timestampsOn{digitalChannelsList(mm)};
+            % CSD
+            shanks = sessionInfo.AnatGrps;
+            shanks(excludeShanks) = [];
+            figure
+            set(gcf,'Position',[100 100 1400 600])
+            for jj = 1:length(shanks)
+                lfp = bz_GetLFP(shanks(jj).Channels,'noPrompts', true);
+                twin = 0.02;
+                [csd,lfpAvg] = bz_eventCSD(lfp,st,'twin',[twin twin],'plotLFP',false,'plotCSD',false);
+                taxis = linspace(-twin,twin,size(csd.data,1));
+                cmax = max(max(csd.data)); 
+                subplot(1,size(sessionInfo.AnatGrps,2),jj);
+                contourf(taxis,1:size(csd.data,2),csd.data',40,'LineColor','none');hold on;
+                set(gca,'YDir','reverse'); xlabel('time (s)'); ylabel('channel'); title(strcat('DigitalCh #',num2str(digitalChannelsList(mm))),'FontWeight','normal'); 
+                colormap jet; try caxis([-cmax cmax]); end
+                hold on
+                for kk = 1:size(lfpAvg.data,2)
+                    plot(taxis,(lfpAvg.data(:,kk)/1000)+kk-1,'k')
+                end
+            end
+            saveas(gcf,['SummaryFigures\digitalPulsesCSD_ch',num2str(digitalChannelsList(mm)), '.png']);
 
+            % PSTH
+            figure;
+            set(gcf,'Position',[100 -100 2500 1200])
+            
+            if ~isempty(st)
+                win = [-0.1 0.5];
+                if length(st) > 1000
+                    st = randsample(st, 1000);
+                    st = sort(st);
+                end
+
+                disp('Plotting spikes raster and psth...');
+                spikeResponse = [];
+                [stccg, t] = CCG([spikes.times st'],[],'binSize',0.005,'duration',1);
+
+                for jj = 1:size(spikes.UID,2)
+                    fprintf(' **Pulses from unit %3.i/ %3.i \n',jj, size(spikes.UID,2)); %\n
+                    rast_x = []; rast_y = [];
+                    for kk = 1:length(st)
+                        temp_rast = spikes.times{jj} - st(kk);
+                        temp_rast = temp_rast(temp_rast>win(1) & temp_rast<win(2));
+                        rast_x = [rast_x temp_rast'];
+                        rast_y = [rast_y kk*ones(size(temp_rast))'];
+                    end
+
+                    spikeResponse = [spikeResponse; zscore(squeeze(stccg(:,end,jj)))'];
+                    subplot(7,ceil(size(spikes.UID,2)/7),jj); % autocorrelogram
+                    plot(rast_x, rast_y,'.','MarkerSize',1)
+                    hold on
+                    plot(t(t>win(1) & t<win(2)), stccg(t>win(1) & t<win(2),end,jj) * kk/max(stccg(:,end,jj))/2,'k','LineWidth',2);
+                    xlim([win(1) win(2)]); ylim([0 kk]);
+                    title(num2str(jj),'FontWeight','normal','FontSize',10);
+
+                    if jj == 1
+                        ylabel('Trial');
+                    elseif jj == size(spikes.UID,2)
+                        xlabel('Time (s)');
+                    else
+                        set(gca,'YTick',[],'XTick',[]);
+                    end
+                end
+            end
+            saveas(gcf,['SummaryFigures\digitalPulsesRaster_ch',num2str(digitalChannelsList(mm)) ,'.png']); 
+            
+            figure
+            if ~isempty(st)
+                imagesc([t(1) t(end)],[1 size(spikeResponse,1)], spikeResponse); caxis([-3 3]); colormap(jet);
+                set(gca,'TickDir','out'); xlabel('Time'); ylabel('Cells'); xlim([-.1 t(end)]);
+            end
+            saveas(gcf,['SummaryFigures\digitalPulsesPsth_',num2str(digitalChannelsList(mm)) ,'ch.png']); 
+        end  
+    catch
+        disp('It is not possible to run digitalPulses')
+    end
+end
 %% 2 - Ripples CSD and PSTH
 
 if any(ismember(listOfAnalysis,'ripples'))
@@ -622,11 +713,11 @@ if any(ismember(listOfAnalysis,'thetaModulation'))
             disp('Theta, gamma and HFO modulation...')
             [sessionInfo] = bz_getSessionInfo(pwd,'noPrompts',true);
             % Theta Profile
-            powerProfile_theta = bz_PowerSpectrumProfile([thetaFreq(1) thetaFreq(2)], 'channels',sessionInfo.channels,'showfig',true);
+            powerProfile_theta = bz_PowerSpectrumProfile([thetaFreq(1) thetaFreq(2)], 'channels',sessionInfo.channels,'showfig',true,'saveMat',false);
             % Low Gamma Profile
-            powerProfile_sg = bz_PowerSpectrumProfile([sgFreq(1) sgFreq(2)], 'channels',sessionInfo.channels,'showfig',true);
+            powerProfile_sg = bz_PowerSpectrumProfile([sgFreq(1) sgFreq(2)], 'channels',sessionInfo.channels,'showfig',true,'saveMat',false);
             % HFO Profile
-            powerProfile_hg = bz_PowerSpectrumProfile([hgFreq(1) hgFreq(2)], 'channels', sessionInfo.channels,'showfig',true);
+            powerProfile_hg = bz_PowerSpectrumProfile([hgFreq(1) hgFreq(2)], 'channels', sessionInfo.channels,'showfig',true,'saveMat',false);
             % get channels of interest % max theta power above pyr layer
             [~, a] = max(powerProfile_theta.mean);
             region.CA1sp = powerProfile_theta.channels(a);
@@ -764,7 +855,7 @@ if any(ismember(listOfAnalysis,'thetaModulation'))
 
             else
                 lfpT = bz_GetLFP(region.CA1sp,'noPrompts',true);
-                PLD = bz_PhaseModulation(spikes,lfpT,[thetaFreq(1) thetaFreq(2)], 'plotting',true,'method','wavelet','saveMat',true);
+                PLD = bz_PhaseModulation(spikes,lfpT,[thetaFreq(1) thetaFreq(2)], 'plotting',false,'method','wavelet','saveMat',false);
                 disp('Theta modlation...')
                 set(gcf,'Position',[100 -100 2500 1200]);
                 for jj = 1:size(spikes.UID,2)
@@ -791,13 +882,13 @@ if any(ismember(listOfAnalysis,'thetaModulation'))
                 saveas(gcf,'SummaryFigures\thetaMod.png');
 
                 % gamma modulation
-                PLD = bz_PhaseModulation(spikes,lfpT,[sgFreq(1) sgFreq(2)],'plotting',false,'method','wavelet','saveMat',true);     
+                PLD_sg = bz_PhaseModulation(spikes,lfpT,[sgFreq(1) sgFreq(2)],'plotting',false,'method','wavelet','saveMat',false);     
                 disp('Gamma modulation...');
                 figure
                 set(gcf,'Position',[100 -100 2500 1200]);
                 for jj = 1:size(spikes.UID,2)
                     subplot(7,ceil(size(spikes.UID,2)/7),jj); % autocorrelogram
-                    area([PLD.phasebins; PLD.phasebins + pi*2],[PLD.phasedistros(:,jj); PLD.phasedistros(:,jj)],'EdgeColor','none');
+                    area([PLD_sg.phasebins; PLD_sg.phasebins + pi*2],[PLD_sg.phasedistros(:,jj); PLD_sg.phasedistros(:,jj)],'EdgeColor','none');
                     hold on
                     ax = axis;
                     x = 0:.001:4*pi;
@@ -819,12 +910,16 @@ if any(ismember(listOfAnalysis,'thetaModulation'))
                 saveas(gcf,'SummaryFigures\gammaMod.png');
             end
             % save Power Spectrum Profile theta
-            save([sessionInfo.FileName,'.PowerSpectrumProfile_',num2str(powerProfile_theta{1}.processinginfo.params.frange(1)),'_',num2str(powerProfile_theta{1}.processinginfo.params.frange(2)),'.channelinfo.mat'],'powerProfile_theta');                
+            save([sessionInfo.FileName,'.PowerSpectrumProfile_',num2str(powerProfile_theta.processinginfo.params.frange(1)),'_',num2str(powerProfile_theta.processinginfo.params.frange(2)),'.channelinfo.mat'],'powerProfile_theta');                
             % save Power Spectrum Profile sg
-            save([sessionInfo.FileName,'.PowerSpectrumProfile_',num2str(powerProfile_sg{1}.processinginfo.params.frange(1)),'_',num2str(powerProfile_sg{1}.processinginfo.params.frange(2)),'.channelinfo.mat'],'powerProfile_sg');
+            save([sessionInfo.FileName,'.PowerSpectrumProfile_',num2str(powerProfile_sg.processinginfo.params.frange(1)),'_',num2str(powerProfile_sg.processinginfo.params.frange(2)),'.channelinfo.mat'],'powerProfile_sg');
             % save Power Spectrum Profile hg
-            save([sessionInfo.FileName,'.PowerSpectrumProfile_',num2str(powerProfile_hg{1}.processinginfo.params.frange(1)),'_',num2str(powerProfile_hg{1}.processinginfo.params.frange(2)),'.channelinfo.mat'],'powerProfile_hg');
+            save([sessionInfo.FileName,'.PowerSpectrumProfile_',num2str(powerProfile_hg.processinginfo.params.frange(1)),'_',num2str(powerProfile_hg.processinginfo.params.frange(2)),'.channelinfo.mat'],'powerProfile_hg');
             save([sessionInfo.FileName,'.region.mat'],'region');
+            if ~diffLFPs
+                PhaseLockingData = PLD;
+                PhaseLockingData_sg = PLD_sg;
+            end
             save([sessionInfo.session.name '.PhaseLockingData.cellinfo.mat'],'PhaseLockingData');
             save([sessionInfo.session.name '.PhaseLockingData_sg.cellinfo.mat'],'PhaseLockingData_sg');
             
