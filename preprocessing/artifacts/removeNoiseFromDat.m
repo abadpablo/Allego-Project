@@ -52,40 +52,54 @@ filename = split(basepath,filesep);
 filename = filename{end};
 
 load([filename,'.session.mat']);
-duration = 60;
+% duration = 60;
 % duration = session.general.duration;
 frequency = xml.rates.wideband;
-fid = fopen(fileTargetAmplifier.name,'r'); filename = fileTargetAmplifier.name;
-C = strsplit(fileTargetAmplifier.name,'.dat'); filenameOut = [C{1} '_temp.dat'];
-fidOutput = fopen(filenameOut,'a');
+% fid = fopen(fileTargetAmplifier.name,'r'); filename = fileTargetAmplifier.name;
+% C = strsplit(fileTargetAmplifier.name,'.dat'); filenameOut = [C{1} '_temp.dat'];
+% fidOutput = fopen(filenameOut,'a');
 
 if exist([basepath filesep strcat(session.general.name,'.MergePoints.events.mat')],'file')
-    
 	load(strcat(session.general.name,'.MergePoints.events.mat'));
 end
 
-
-
-while 1
-    data = fread(fid,[nChannels frequency*duration],'int16');
-    
-    if isempty(data)
-        break;
-    end
-    
-    if strcmpi('substractMedian',method)
-        m_data = median(data(ch,:));
-    elseif strcmpi('substractMean',method)
-        m_data = mean(data(ch,:));
-    end
-
-    for ii = 1:length(ch)
-        data(ch(ii),:) = int16(double(data(ch(ii),:)) - double(m_data));
-    end
-    fwrite(fidOutput,data,'int16');
+tic
+disp('Creating a .dat back up...')
+copyfile(strcat(filename,'.dat'),'original.dat');
+m = memmapfile(fullfile(basepath,strcat(filename,'.dat')),'Format','int16','Writable',true);
+data = reshape(m.Data,nChannels,[]);
+if strcmpi('substractMedian',method)
+    m_data = median(data(ch,:));
+elseif strcmpi('substractMean',method)
+    m_data = mean(data(ch,:));
 end
-fclose(fid);
-fclose(fidOutput);
+
+for ii=1:length(ch)
+    data(ch(ii),:) = int16(double(data(ch(ii),:)) - double(m_data));
+end
+disp('Cleaning data on disk...')
+m.Data = data(:);
+toc
+% while 1
+%     data = fread(fid,[nChannels frequency*duration],'int16');
+%     
+%     if isempty(data)
+%         break;
+%     end
+%     
+%     if strcmpi('substractMedian',method)
+%         m_data = median(data(ch,:));
+%     elseif strcmpi('substractMean',method)
+%         m_data = mean(data(ch,:));
+%     end
+% 
+%     for ii = 1:length(ch)
+%         data(ch(ii),:) = int16(double(data(ch(ii),:)) - double(m_data));
+%     end
+%     fwrite(fidOutput,data,'int16');
+% end
+% fclose(fid);
+% fclose(fidOutput);
 
 % if ~keepDat
 %     copyfile(filename, [C{1} '_original.dat']);

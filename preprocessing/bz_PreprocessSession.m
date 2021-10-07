@@ -138,8 +138,6 @@ cd(basepath);
 disp('Concatenate session folders...');
 bz_ConcatenateDats(pwd,0,1);
 
-
-
 %% Get analog and digital pulses
 % if  ~isempty(analogCh)
 %     [pulses] = bz_getAnalogPulses('analogCh',analogCh,'manualThr');
@@ -178,6 +176,9 @@ if iscell(cleanArtifacts) || cleanArtifacts
         end
         pulArtifacts = sort([pulArtifacts_dig]);
     end
+    pulArtifacts(isnan(pulArtifacts)) = [];
+    pulArtifacts_dif = [0; diff(pulArtifacts)];
+    pulArtifacts(pulArtifacts_dif > 1) = [];
     cleanDigital(pulArtifacts);
 %     cleanPulses(pulArtifacts);
 end
@@ -209,11 +210,12 @@ if islogical(medianSubstr) && medianSubstr
 %     removeNoiseFromDat(pwd);
     removeNoiseFromLFP(pwd,'keepDat',true);
 elseif medianSubstr
-    removeNoiseFromDat(pwd,'ch',medianSubstr);
+%     removeNoiseFromDat(pwd,'ch',medianSubstr);
+    removeNoiseFromDat(pwd);
+    removeNoiseFromDat_subfolders(pwd);
 end
 
-
-
+% removeNoiseFromDat_subfolders
 %% Get brain states
 if stateScore 
     try 

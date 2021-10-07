@@ -27,6 +27,7 @@ addParameter(p,'saveMat',true,@islogical);
 addParameter(p,'force',false,@islogical);
 addParameter(p,'timestamps_subSession',[],@isnumeric);
 addParameter(p,'foldername',[],@isstr);
+addParameter(p,'selectedRippleChannel',[],@isnumeric);
 
 
 parse(p,varargin{:});
@@ -38,6 +39,7 @@ saveMat = p.Results.saveMat;
 force = p.Results.force;
 timestamps_subSession = p.Results.timestamps_subSession;
 foldername = p.Results.foldername;
+selectedRippleChannel = p.Results.selectedRippleChannel;
 
 prevPath = pwd;
 cd(basePath);
@@ -502,12 +504,21 @@ if ~isempty(Ripples_CSD)
             disp(['Ripple_Channel=' num2str(Bout_3(1)) ' Sharpwave_Channel=' num2str(Bout_3(2)) '  noise_Chnnel=' num2str(Bout_3(3)) ])
         end
     end
-
-    rippleChannels.Ripple_Channel=Rip_chnl - 1;
-    rippleChannels.Sharpwave_Channel=SWR_chnl - 1;
-    rippleChannels.Noise_Channel=noise_chnl - 1;
-    rippleChannels.Deep_Sup=Deep_Sup;
-    rippleChannels.foldername = foldername;
+    
+    if ~isempty(selectedRippleChannel)
+        rippleChannels.Ripple_Channel = selectedRippleChannel;
+        rippleChannels.Sharpwave_Channel=SWR_chnl - 1;
+        rippleChannels.Noise_Channel=noise_chnl - 1;
+        rippleChannels.Deep_Sup=Deep_Sup;
+        rippleChannels.foldername = foldername;
+    else
+        
+        rippleChannels.Ripple_Channel=Rip_chnl - 1;
+        rippleChannels.Sharpwave_Channel=SWR_chnl - 1;
+        rippleChannels.Noise_Channel=noise_chnl - 1;
+        rippleChannels.Deep_Sup=Deep_Sup;
+        rippleChannels.foldername = foldername;
+    end
 
     if saveMat
         disp('Saving results...');

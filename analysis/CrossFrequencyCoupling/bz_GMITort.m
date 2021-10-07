@@ -1,4 +1,4 @@
-function [MI] = bz_GMITort(lfp,phaserange,amprange,varargin)
+function [GMI] = bz_GMITort(lfp,phaserange,amprange,varargin)
 % [GMI_Tort] = bz_GMITort(lfp,varargin)
 %
 %

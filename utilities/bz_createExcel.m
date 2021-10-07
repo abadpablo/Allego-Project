@@ -1,4 +1,4 @@
-function [excel] = bz_createExcel(varargin)
+function [excel] = bz_createExcel(listOfAnalysis,varargin)
 %
 % Creates excel file with the properties indicated in inputs (analyseSubSessions, spikes, ripples, theta-gamma, spikeTrain) 
 %
@@ -45,8 +45,8 @@ addParameter(p,'performance',[], @isstruct);
 addParameter(p,'thetaGamma',[], @isstruct);
 addParameter(p,'forceReload',false,@islogical);
 addParameter(p,'saveMat',false,@islogical);
-addParameter(p,'pathExcel','F:\data',@isstr);
-addParameter(p,'nameExcel','Excel Prueba',@isstr);
+addParameter(p,'pathExcel',[],@isstr);
+addParameter(p,'nameExcel',[],@isstr);
 addParameter(p,'tracking',[],@isstruct);
 addParameter(p,'PhaseLockingData',[],@isstruct);
 addParameter(p,'PhaseLockingData_sg',[],@issstruct);

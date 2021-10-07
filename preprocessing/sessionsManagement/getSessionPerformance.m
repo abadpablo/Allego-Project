@@ -125,8 +125,19 @@ for ii=1:length(MergePoints.foldernames)
 %             end
 %             
 %             cd(basepath)
+        elseif strcmpi(tracking.apparatus{count1}.name,'Object Recognition')
+            count = count+1;
+            cd(tracking.folders{count1})
+            digitalIn = bz_getDigitalIn('all');
+            tracking_subfolder = getSessionTracking();
+            try
+                fprintf('Computing TMaze performance in %s folder \n',tracking.folders{count1});
+                tempPerformance{count} = performanceObjectRecognition('digitalIn',digitalIn,'tracking',tracking_subfolder);
+                performanceFolder(count) = ii;
+            catch
+            end
             
-
+            cd(basepath)
         end
     end
 
@@ -135,6 +146,7 @@ end
 %% Concatenate and sync timestamps
 
 ts = []; subSessions = []; maskSessions = [];
+% YMaze variables
 ts_transitions = [];
 ts_transitions_zero = [];
 ts_right = [];
@@ -146,6 +158,13 @@ group4_sample = []; group4_choice = [];
 times_stemArm = [];
 times_rightArm = [];
 times_leftArm = [];
+
+% Object Recognition variables
+
+transition = [];
+ts_Object1 = [];
+ts_Object2 = [];
+
 
 
 for ii=1:length(performanceFolder)
@@ -195,7 +214,29 @@ for ii=1:length(performanceFolder)
             for i = 1:length(tempPerformance{ii}.wrong_times)
                 ts_wrong{ii}{i} = tempPerformance{ii}.wrong_times{i} + MergePoints.timestamps(performanceFolder(ii),1);
             end
-        end
+        
+        
+        elseif strcmpi(tempPerformance{ii}.paradigm,'Object Recognition')
+            sumTs{ii} = tempPerformance{ii}.timestamps + MergePoints.timestamps(performanceFolder(ii),1);
+            sumTs_Object1{ii} = tempPerformance{ii}.ts.Object1 + MergePoints.timestamps(performanceFolder(ii),1);
+            sumTs_Object2{ii} = tempPerformance{ii}.ts.Object2 + MergePoints.timestamps(performanceFolder(ii),1);
+            
+            ts = [ts; sumTs{ii}];
+            ts_Object1 = [ts_Object1 sumTs_Object1{ii}];
+            ts_Object2 = [ts_Object2 sumTs_Object2{ii}];
+            
+            subSessions = [subSessions; MergePoints.timestamps(performanceFolder(ii),1:2)];
+            maskSessions = [maskSessions; ones(size(sumTs{ii}))*ii];
+%             entrances_Object1{ii} = tempPerformance{ii}.entrances.Object1;
+%             entrances_Object2{ii} = tempPerformance{ii}.entrances.Object2;
+%             score_Object1{ii} = tempPerformance{ii}.score.Object1;
+%             score_Object2{ii} = tempPerformance{ii}.score.Object2;
+%             time_Object1{ii} = tempPerformance{ii}.time.Object1;
+%             time_Object2{ii} = tempPerformance{ii}.time.Object2;
+            
+            transition{ii} = tempPerformance{ii}.transition;
+            transition{ii}(3,:) = MergePoints.timestamps(performanceFolder(ii),1) + transition{ii}(3,:);
+        end    
     end
 end
 
@@ -203,44 +244,25 @@ end
 
     %% Concatenating performance fields...
 
+% General Paradigm
+folder = []; paradigm = [];
+
+% YMaze Paradigm
 score = [];
-transitions_out_nonzero = []; transitions_fr_out_nonzero = [];
-transitions_times_out_nonzero = [];
+transitions_out_nonzero = []; transitions_fr_out_nonzero = []; transitions_times_out_nonzero = [];
+right_transitions_epoch = []; right_transitions_fr = []; wrong_transitions_epoch = []; wrong_transitions_fr = [];
+entrances = []; transitions_out = []; transitions_fr_out = []; transitions_times_out = [];
+frames_stem = []; frames_right = []; frames_left = []; times_stem = []; times_right = []; times_left = [];
+ballistic = [];  doubted = []; ballistic_perc = []; doubted_perc = []; times = [];
+right_epoch = []; right_fr = []; right_times = []; wrong_epoch = []; wrong_fr = []; wrong_times = []; rightTriades = []; wrongTriades = []; sampleVSchoice = []; 
 
-right_transitions_epoch = [];
-right_transitions_fr = [];
-wrong_transitions_epoch = [];
-wrong_transitions_fr = [];
-
+% Object Recognition Paradigm
 entrances = [];
-transitions_out = [];
-transitions_fr_out = [];
-transitions_times_out = [];
-
-frames_stem = [];
-frames_right = [];
-frames_left = [];
-times_stem = [];
-times_right = [];
-times_left = [];
-
-ballistic = []; 
-doubted = [];
-ballistic_perc = [];
-doubted_perc = [];
-times = [];
-
-right_epoch = [];
-right_fr = [];
-right_times = [];
-wrong_epoch = [];
-wrong_fr = [];
-wrong_times = [];
-rightTriades = [];
-wrongTriades = [];
-sampleVSchoice = [];
+score = [];
+time = [];
 folder = [];
 paradigm = [];
+
 
 for ii=1:size(tempPerformance,2)
     if strcmpi(tempPerformance{ii}.paradigm,'YMaze') 
@@ -279,26 +301,35 @@ for ii=1:size(tempPerformance,2)
         sampleVSchoice{ii} = tempPerformance{ii}.sampleVSchoice;
         folder{ii} = tempPerformance{ii}.folder;
         paradigm{ii} = tempPerformance{ii}.paradigm;
+        
+    elseif strcmpi(tempPerformance{ii}.paradigm,'Object Recognition')
+        entrances{ii} = tempPerformance{ii}.entrances;
+        score{ii} = tempPerformance{ii}.score;
+        time{ii} = tempPerformance{ii}.time;
+        folder{ii} = tempPerformance{ii}.folder;
+        paradigm{ii} = tempPerformance{ii}.paradigm;
     end
 end
 
-for i=1:length(sampleVSchoice)
-    if ~isempty(sampleVSchoice{i})
-        for j=1:length(sampleVSchoice{i}.group1.sample)
-            sampleVSchoice{i}.group1.sample{j}(3,:) = group1_sample{i}{j};
-            sampleVSchoice{i}.group1.choice{j}(3,:) = group1_choice{i}{j};
-        end
-        for j=1:length(sampleVSchoice{i}.group2.sample)
-            sampleVSchoice{i}.group2.sample{j}(3,:) = group2_sample{i}{j};
-            sampleVSchoice{i}.group2.choice{j}(3,:) = group2_choice{i}{j};
-        end
-        for j=1:length(sampleVSchoice{i}.group3.sample)
-            sampleVSchoice{i}.group3.sample{j}(3,:) = group3_sample{i}{j};
-            sampleVSchoice{i}.group3.choice{j}(3,:) = group3_choice{i}{j};
-        end
-        for j=1:length(sampleVSchoice{i}.group4.sample)
-            sampleVSchoice{i}.group4.sample{j}(3,:) = group4_sample{i}{j};
-            sampleVSchoice{i}.group4.choice{j}(3,:) = group4_choice{i}{j};
+if ~isempty(sampleVSchoice)
+    for i=1:length(sampleVSchoice)
+        if ~isempty(sampleVSchoice{i})
+            for j=1:length(sampleVSchoice{i}.group1.sample)
+                sampleVSchoice{i}.group1.sample{j}(3,:) = group1_sample{i}{j};
+                sampleVSchoice{i}.group1.choice{j}(3,:) = group1_choice{i}{j};
+            end
+            for j=1:length(sampleVSchoice{i}.group2.sample)
+                sampleVSchoice{i}.group2.sample{j}(3,:) = group2_sample{i}{j};
+                sampleVSchoice{i}.group2.choice{j}(3,:) = group2_choice{i}{j};
+            end
+            for j=1:length(sampleVSchoice{i}.group3.sample)
+                sampleVSchoice{i}.group3.sample{j}(3,:) = group3_sample{i}{j};
+                sampleVSchoice{i}.group3.choice{j}(3,:) = group3_choice{i}{j};
+            end
+            for j=1:length(sampleVSchoice{i}.group4.sample)
+                sampleVSchoice{i}.group4.sample{j}(3,:) = group4_sample{i}{j};
+                sampleVSchoice{i}.group4.choice{j}(3,:) = group4_choice{i}{j};
+            end
         end
     end
 end
@@ -360,47 +391,127 @@ end
 %% OUTPUT
 performance = [];
 
+
 performance.score = score;
-performance.transitions_out_nonzero = transitions_out_nonzero;
-performance.transitions_fr_out_nonzero = transitions_fr_out_nonzero;
-performance.transitions_times_out_nonzero = sumTs_transitions;
-performance.transitions_out = transitions_out;
-performance.transitions_fr_out = transitions_fr_out;
-performance.transitions_times_out = sumTs_transitions_zero;
-performance.right_transitions_epoch = right_transitions_epoch;
-performance.right_transitions_fr = right_transitions_fr;
-performance.right_epoch = right_epoch;
-performance.right_fr = right_fr;
-performance.right_times = ts_right;
-performance.rightTriades = rightTriades;
-performance.wrong_transitions_epoch = wrong_transitions_epoch;
-performance.wrong_transitions_fr = wrong_transitions_fr;
-performance.wrong_epoch = wrong_epoch;
-performance.wrong_fr = wrong_fr;
-performance.wrong_times = ts_wrong;
-performance.wrongTriades = wrongTriades;
 performance.entrances = entrances;
-performance.frames_stem = frames_stem;
-performance.frames_left = frames_left;
-performance.frames_right = frames_right;
-performance.times_stem = ts_stemArm;
-performance.times_left = ts_leftArm;
-performance.times_right = ts_rightArm;
-performance.ballistic = ballistic;
-performance.doubted = doubted;
-performance.ballistic_perc = ballistic_perc;
-performance.doubted_perc = doubted_perc;
-performance.times = times;
-performance.sampleVSchoice = sampleVSchoice;
 performance.folder = folder;
 performance.paradigm = paradigm;
 performance.timestamps = ts;
 performance.ts = sumTs;
+performance.subSessions = subSessions;
+performance.maskSessions = maskSessions;
 
-performance.right = right;
-performance.wrong = wrong;
+% Object Recogntion
+if exist('time','var')
+    performance.time = time;
+end
+if exist('ts_Object1','var')
+    performance.ts_Object1 = ts_Object1;
+end
+if exist('ts_Object2','var')
+    performance.ts_Object2 = ts_Object2;
+end
+if exist('transition','var')
+    performance.transition = transition;
+end
 
-
+% YMaze Performance
+if ~isempty(transitions_out_nonzero)
+    performance.transitions_out_nonzero = transitions_out_nonzero;
+end
+if ~isempty(transitions_fr_out_nonzero)
+    performance.transitions_fr_out_nonzero = transitions_fr_out_nonzero;
+end
+if exist('sumTs_transitions','var') 
+    performance.transitions_times_out_nonzero = sumTs_transitions;
+end
+if ~isempty(transitions_out)
+    performance.transitions_out = transitions_out;
+end
+if ~isempty(transitions_fr_out)
+    performance.transitions_fr_out = transitions_fr_out;
+end
+if exist('sumTs_transitions_zero','var')
+    performance.transitions_times_out = sumTs_transitions_zero;
+end
+if ~isempty(right_transitions_epoch)
+    performance.right_transitions_epoch = right_transitions_epoch;
+end
+if ~isempty(right_transitions_fr)
+    performance.right_transitions_fr = right_transitions_fr;
+end
+if ~isempty(right_epoch)
+    performance.right_epoch = right_epoch;
+end
+if ~isempty(right_fr)
+    performance.right_fr = right_fr;
+end
+if ~isempty(ts_right)
+    performance.right_times = ts_right;
+end
+if ~isempty(rightTriades)
+    performance.rightTriades = rightTriades;
+end
+if ~isempty(wrong_transitions_epoch)
+    performance.wrong_transitions_epoch = wrong_transitions_epoch;
+end
+if ~isempty(wrong_transitions_fr)
+    performance.wrong_transitions_fr = wrong_transitions_fr;
+end
+if ~isempty(wrong_epoch)
+    performance.wrong_epoch = wrong_epoch;
+end
+if ~isempty(wrong_fr)
+    performance.wrong_fr = wrong_fr;
+end
+if ~isempty(ts_wrong)
+    performance.wrong_times = ts_wrong;
+end
+if ~isempty(wrongTriades)
+    performance.wrongTriades = wrongTriades;
+end
+if ~isempty(frames_stem)
+    performance.frames_stem = frames_stem;
+end
+if ~isempty(frames_left)
+    performance.frames_left = frames_left;
+end
+if ~isempty(frames_right)
+    performance.frames_right = frames_right;
+end
+if exist('ts_stemArm','var')
+    performance.times_stem = ts_stemArm;
+end
+if exist('ts_leftArm','var')
+    performance.times_left = ts_leftArm;
+end
+if exist('ts_rightArm','var')
+    performance.times_right = ts_rightArm;
+end
+if ~isempty(ballistic)
+    performance.ballistic = ballistic;
+end
+if ~isempty(doubted)
+    performance.doubted = doubted;
+end
+if ~isempty(ballistic_perc)
+    performance.ballistic_perc = ballistic_perc;
+end
+if ~isempty(doubted_perc)
+    performance.doubted_perc = doubted_perc;
+end
+if ~isempty(times)
+    performance.times = times;
+end
+if ~isempty(sampleVSchoice)
+    performance.sampleVSchoice = sampleVSchoice;
+end
+if ~isempty(right)
+    performance.right = right;
+end
+if ~isempty(wrong)
+	performance.wrong = wrong;
+end
 
 %% save performance 
 [sessionInfo] = bz_getSessionInfo(pwd, 'noPrompts', true);

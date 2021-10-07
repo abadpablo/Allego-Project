@@ -280,8 +280,8 @@ if showFig
         set(gcf,'Position',get(0,'ScreenSize'))
         subplot(2,1,1);errorbar( binde, MeanPowGa{1},MeanPowStd{1} ,'LineWidth',2);title(['Gamma Power/Theta Modulation ',' GMI  ',num2str(GMI{1}),' Ch: ', num2str(phaseCh)]);
         axis([0 380 min(MeanPowGa{1})-max(MeanPowStd{1})*2  max(MeanPowGa{1})+max(MeanPowStd{1})*2 ]);
-        subplot(2,1,2);errorbar( binde,MeanFGa, MeanFStd,'LineWidth',2 );title(['Gamma Frequency/Theta Modulation ',' GFMI  ',num2str(GFMI{1}),' Ch: ', num2str(phaseCh)]);
-        axis([0 380 min(MeanFGa)-max(MeanFStd)*2  max(MeanFGa)+max(MeanFStd)*2  ]);
+        subplot(2,1,2);errorbar( binde,MeanFGa{1}, MeanFStd{1},'LineWidth',2 );title(['Gamma Frequency/Theta Modulation ',' GFMI  ',num2str(GFMI{1}),' Ch: ', num2str(phaseCh)]);
+        axis([0 380 min(MeanFGa{1})-max(MeanFStd{1})*2  max(MeanFGa{1})+max(MeanFStd{1})*2  ]);
         if saveFig
             if ~isempty(foldername)
                 saveas(gcf,['lfpAnalysisFigures\GMI.',foldername,'_',num2str(amprange(1)),num2str(amprange(end)),'.png'])
@@ -290,7 +290,6 @@ if showFig
             end
         end
     else
-           
         meanpowga = cell2mat(MeanPowGa);
         stdpowga = cell2mat(MeanPowStd);
         minpowga = min(meanpowga);

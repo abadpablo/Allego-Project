@@ -240,7 +240,8 @@ figure,
 subplot(2,2,1)
 plot_numberEntrances(stemROI_output.entrances,leftROI_output.entrances,rightROI_output.entrances, centerROI_output.entrances);
 subplot(2,2,2)
-timeInROIs = plot_timeSpentROIs(frames_stemArm, frames_leftArm, frames_rightArm, frames_centerMaze);
+% timeInROIs = plot_timeSpentROIs(frames_stemArm, frames_leftArm, frames_rightArm, frames_centerMaze);
+timeInROIs = bz_timeSpentROIs(frames_stemArm,frames_leftArm,frames_rightArm,frames_centerMaze);
 % Heat map of the position of the animal during the trial
 position = [tracking.position.x, tracking.position.y];
 subplot(2,2,3)

@@ -59,10 +59,13 @@ ts = int32(ts * fs);
 winArt = winArt * fs;
 winDC = winDC * fs;
 
-disp('Creating .dat back up...');
-copyfile(strcat(filename,'.dat'),'copy_bin.dat'); % create .dat back up
+if ~exist([basepath filesep 'copy_bin.dat'])
+    disp('Creating .dat back up...');
+    copyfile(strcat(filename,'.dat'),'copy_bin.dat'); % create .dat back up
+end
 m = memmapfile(fullfile(basepath,strcat(filename,'.dat')),'Format','int16','Writable', true);
 data=reshape(m.Data,nChannels,[]);
+
 
 
 for hh = ch

@@ -106,18 +106,20 @@ if exist([basepath filesep strcat(sessionInfo.session.name,'.MergePoints.events.
     load(strcat(sessionInfo.session.name, '.MergePoints.events.mat'));
     for ii=1:length(digitalInFolder)
         if strcmpi(MergePoints.foldernames{digitalInFolder(ii)},tempDigitalIn{ii}.folder)
-            for jj = 1:length(tempDigitalIn{ii}.timestampsOn)
-                sumTsOn{ii}{jj} = tempDigitalIn{ii}.timestampsOn{jj} + MergePoints.timestamps(digitalInFolder(ii),1);
-                sumTsOff{ii}{jj} = tempDigitalIn{ii}.timestampsOff{jj} + MergePoints.timestamps(digitalInFolder(ii),1);
-                sumTsInts{ii}{jj} = tempDigitalIn{ii}.ints{jj} + MergePoints.timestamps(digitalInFolder(ii),1);
-                sumTsDur{ii}{jj} = tempDigitalIn{ii}.dur{jj};
-                sumTsIntsPeriods{ii}{jj} = tempDigitalIn{ii}.intsPeriods{jj} + MergePoints.timestamps(digitalInFolder(ii),1);
-                if jj == 1
-                    subSessions = [subSessions; MergePoints.timestamps(digitalInFolder(ii),1:2)];
+            if isfield(tempDigitalIn{ii},'timestampsOn')
+                for jj = 1:length(tempDigitalIn{ii}.timestampsOn)
+                    sumTsOn{ii}{jj} = tempDigitalIn{ii}.timestampsOn{jj} + MergePoints.timestamps(digitalInFolder(ii),1);
+                    sumTsOff{ii}{jj} = tempDigitalIn{ii}.timestampsOff{jj} + MergePoints.timestamps(digitalInFolder(ii),1);
+                    sumTsInts{ii}{jj} = tempDigitalIn{ii}.ints{jj} + MergePoints.timestamps(digitalInFolder(ii),1);
+                    sumTsDur{ii}{jj} = tempDigitalIn{ii}.dur{jj};
+                    sumTsIntsPeriods{ii}{jj} = tempDigitalIn{ii}.intsPeriods{jj} + MergePoints.timestamps(digitalInFolder(ii),1);
+                    if jj == 1
+                        subSessions = [subSessions; MergePoints.timestamps(digitalInFolder(ii),1:2)];
+                    end
+                    maskSessions{ii}= [ones(size(sumTsOn{ii}{jj}))*ii];
+                    folders{ii} = tempDigitalIn{ii}.folder;
+
                 end
-                maskSessions{ii}= [ones(size(sumTsOn{ii}{jj}))*ii];
-                folders{ii} = tempDigitalIn{ii}.folder;
-                
             end
         end
     end

@@ -74,6 +74,7 @@ end
     headY_column = strcmp(variableNames,'HeadPositionY');
     tailX_column = strcmp(variableNames,'TailPositionX');
     tailY_column = strcmp(variableNames,'TailPositionY');
+    
     % YMaze
     inArm1_column = strcmp(variableNames,'InArm1');
     inArm2_column = strcmp(variableNames,'InArm2');
@@ -92,7 +93,11 @@ end
     
     
     prueba_column = strcmp(variableNames,'prueba');
-    
+    % Object Recognition
+    inObject1_column = strcmp(variableNames,'InObject1');
+    inObject2_column = strcmp(variableNames,'InObject2');
+    inOut_column = strcmp(variableNames,'InOUT');
+
     
     % We need to be sure that the column of time is not a duration variable
       
@@ -144,6 +149,11 @@ inLeftReward = CSVArray(:,inLeftReward_column);
 inRightReward = CSVArray(:,inRightReward_column);
 inDecision = CSVArray(:,inDecision_column);
 inStarting = CSVArray(:,inStarting_column);
+
+% Object Recognition
+inObject1 = CSVArray(:,inObject1_column);
+inObject2 = CSVArray(:,inObject2_column);
+inOut = CSVArray(:,inOut_column);
 
 %% Load the tracking_xmlFile
 
@@ -562,7 +572,13 @@ plot([boundingbox_xmin boundingbox_xmin boundingbox_xmax boundingbox_xmax boundi
 if exist('zone','var')
     hold on;
     for i=1:num_zones
-    plot([boundingbox_zones_xmin{i} boundingbox_zones_xmin{i} boundingbox_zones_xmax{i} boundingbox_zones_xmax{i} boundingbox_zones_xmin{i}],[boundingbox_zones_ymin{i} boundingbox_zones_ymax{i}, boundingbox_zones_ymax{i}, boundingbox_zones_ymin{i} boundingbox_zones_ymin{i}],'b')
+        if strcmpi(apparatus_name,'Object Recognition') && ~strcmpi(zone{i}.name.Text,'OUT')
+            % Need to plot the zones as a circle
+            center = [center_zones_x{i} center_zones_y{i}];
+            radius = [boundingbox_zones_h{i}];
+            viscircles(center,radius/2);
+        end
+            plot([boundingbox_zones_xmin{i} boundingbox_zones_xmin{i} boundingbox_zones_xmax{i} boundingbox_zones_xmax{i} boundingbox_zones_xmin{i}],[boundingbox_zones_ymin{i} boundingbox_zones_ymax{i}, boundingbox_zones_ymax{i}, boundingbox_zones_ymin{i} boundingbox_zones_ymin{i}],'b')
     end  
 end
 view(0,-90)
@@ -578,7 +594,13 @@ if ~isempty(head_pos)
     if exist('zone','var')
         hold on;
         for i=1:num_zones
-        plot([boundingbox_zones_xmin{i} boundingbox_zones_xmin{i} boundingbox_zones_xmax{i} boundingbox_zones_xmax{i} boundingbox_zones_xmin{i}],[boundingbox_zones_ymin{i} boundingbox_zones_ymax{i}, boundingbox_zones_ymax{i}, boundingbox_zones_ymin{i} boundingbox_zones_ymin{i}],'b')
+            if strcmpi(apparatus_name,'Object Recognition') && ~strcmpi(zone{i}.name.Text,'OUT')
+                % Need to plot the zones as a circle
+                center = [center_zones_x{i} center_zones_y{i}];
+                radius = [boundingbox_zones_h{i}];
+                viscircles(center,radius/2);
+            end
+            plot([boundingbox_zones_xmin{i} boundingbox_zones_xmin{i} boundingbox_zones_xmax{i} boundingbox_zones_xmax{i} boundingbox_zones_xmin{i}],[boundingbox_zones_ymin{i} boundingbox_zones_ymax{i}, boundingbox_zones_ymax{i}, boundingbox_zones_ymin{i} boundingbox_zones_ymin{i}],'b')
         end  
     end
 end
@@ -586,12 +608,18 @@ view(0,-90)
 
 if ~isempty(tail_pos)
     figure,
-    plot(head_x,head_y,'k'), title('Filtered tail tracking data')
+    plot(tail_x,tail_y,'k'), title('Filtered tail tracking data')
     hold on
     plot([boundingbox_xmin boundingbox_xmin boundingbox_xmax boundingbox_xmax boundingbox_xmin], [boundingbox_ymin boundingbox_ymax, boundingbox_ymax, boundingbox_ymin boundingbox_ymin],'r')
     if exist('zone','var')
         hold on;
         for i=1:num_zones
+            if strcmpi(apparatus_name,'Object Recognition') && ~strcmpi(zone{i}.name.Text,'OUT')
+                % Need to plot the zones as a circle
+                center = [center_zones_x{i} center_zones_y{i}];
+                radius = [boundingbox_zones_h{i}];
+                viscircles(center,radius/2);
+            end
         plot([boundingbox_zones_xmin{i} boundingbox_zones_xmin{i} boundingbox_zones_xmax{i} boundingbox_zones_xmax{i} boundingbox_zones_xmin{i}],[boundingbox_zones_ymin{i} boundingbox_zones_ymax{i}, boundingbox_zones_ymax{i}, boundingbox_zones_ymin{i} boundingbox_zones_ymin{i}],'b')
         end  
     end
@@ -723,6 +751,20 @@ distance = cumsum(distance(~isnan(distance)));
 distance = max(distance);
 
 tracking.distance = distance/100;
+
+% Object Recognition
+if ~isempty(inObject1)
+    tracking.zone.inObject1 = inObject1;
+end
+
+if ~isempty(inObject2)
+    tracking.zone.inObject2 = inObject2;
+end
+
+if ~isempty(inOut)
+    tracking.zone.inOut = inOut;
+end
+
 
 if saveMat
     save([basepath filesep fbasename '.Tracking.Behavior.mat'],'tracking');

@@ -145,7 +145,7 @@ bpath = 'F:\data\HPS25\HPS25_040621_sess2';
 bz_PreprocessSession('basepath',bpath,'getPos',false,'analogCh',[]);
 %%
 bpath = 'G:\HPS23\HPS23_040621_sess1';
-bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'diffLFPs',true,'analyzeSubSessions',false,'exclude',{'spikes','ripples','thetaModulation','behaviour','performance','spikeTrain','CellExplorer','lfp_analysis'});
+bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'diffLFPs',true,'analyzeSubSessions',true,'exclude',{'spikes','thetaModulation','behaviour','performance','spikeTrain','CellExplorer','lfp_analysis'});
 
 
 bpath = 'G:\HPS23\HPS23_090621_sess9';
@@ -166,5 +166,167 @@ bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'digitalChannelsLi
 bpath = 'D:\opto\HPR21409\HPR21409_240921_sess4';
 bz_PreprocessSession('basepath',bpath,'cleanArtifacts',{7});
 bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'digitalChannelsList',7,'exclude',{'behaviour','performance','lfp_analysis','excel'});
+
+
+bpath = 'D:\opto\HPR21409\HPR21409_270921_sess5';
+bz_PreprocessSession('basepath',bpath,'cleanArtifacts',{7});
+bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'digitalChannelsList',7,'exclude',{'behaviour','performance','lfp_analysis','excel'});
+
+
+bpath = 'D:\opto\HPR21409\HPR21409_280921_sess6';
+bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'digitalChannelsList',7,'exclude',{'lfp_analysis','excel'});
+
+
+bpath = 'D:\opto\HPR21409\HPR21409_290921_sess7';
+bz_PreprocessSession('basepath',bpath,'cleanArtifacts',{7});
+bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'digitalChannelsList',7,'exclude',{'lfp_analysis','excel'});
+
+bpath = 'D:\opto\HPR21409\HPR21409_300921_sess8';
+bz_PreprocessSession('basepath',bpath,'cleanArtifacts',{7});
+
+bpath = 'D:\opto\HPR21409\HPR21409_041021_sess9';
+bz_PreprocessSession('basepath',bpath,'cleanArtifacts',{7});
+
+bpath = 'D:\opto\HPR21409\HPR21409_051021_sess10';
+% bz_PreprocessSession('basepath',bpath,'cleanArtifacts',{7});
+bz_PreprocessSession('basepath',bpath);
+
+%bz_analyzeSession('basepath',bpath,'getWaveformsFromDat',true,'digitalChannelsList',7,'exclude',{'lfp_analysis','excel'});
+
+%% HPS 25 ANALYSIS
+% KETAMINE
+
+bpath = 'F:\data\HPS25\HPS25_240621_sess2';
+bz_PreprocessSession('basepath',bpath);
+bz_analyzeSession('basepat',bpath,'analyzeSubSessions',true,'exclude',{'spikes','digitalPulses','thetaModulation','spikeTrain','plotPlaceFields'});
+
+
+%% HPS-24 ANALYSIS
+
+bpath = 'F:\data\HPS24\HPS24_230621_sess1';
+bz_PreprocessSession('basepath',bpath);
+bz_analyzeSession('basepat',bpath,'analyzeSubSessions',true,'nameExcel','GLUN3','exclude',{'spikes','digitalPulses','thetaModulation','placeCells','spikeTrain','CellExplorer','plotPlaceFields'});
+
+bpath = 'F:\data\HPS24\HPS24_280621_sess3';
+bz_analyzeSession('basepat',bpath,'analyzeSubSessions',true,'nameExcel','GLUN3','exclude',{'spikes','digitalPulses','thetaModulation','placeCells','spikeTrain','CellExplorer','plotPlaceFields'});
+
+%% HPS 24
+
+try
+bpath = 'F:\data\HPS24\HPS24_230621_sess1';
+bz_analyzeSession('basepat',bpath,'analyzeSubSessions',true,'nameExcel','GLUN3','exclude',{'spikes','digitalPulses','thetaModulation','placeCells','spikeTrain','CellExplorer','plotPlaceFields'});
+catch
+   warning('F:\data\HPS24\HPS24_230621_sess1') 
+end
+
+%%
+try
+bpath = 'F:\data\HPS24\HPS24_280621_sess3';
+bz_analyzeSession('basepat',bpath,'analyzeSubSessions',true,'nameExcel','GLUN3','exclude',{'spikes','digitalPulses','thetaModulation','placeCells','spikeTrain','CellExplorer','plotPlaceFields'});
+catch
+   warning('F:\data\HPS24\HPS24_280621_sess3') 
+end
+%%
+try
+bpath = 'F:\data\HPS24\HPS24_290621_sess4';
+bz_analyzeSession('basepat',bpath,'analyzeSubSessions',true,'nameExcel','GLUN3','exclude',{'spikes','digitalPulses','thetaModulation','placeCells','spikeTrain','CellExplorer','plotPlaceFields'});
+catch
+   warning('Not possible to run HPS24_290621') 
+end
+
+%% HPS-25
+
+try
+bpath = 'F:\data\HPS25\HPS25_240621_sess2';
+bz_analyzeSession('basepat',bpath,'analyzeSubSessions',true,'nameExcel','GLUN3','selectedRippleChannel',16,'exclude',{'spikes','digitalPulses','thetaModulation','placeCells','spikeTrain','CellExplorer','plotPlaceFields'});
+catch
+   warning('Not possible to run HPS25_240621_sess2') 
+end
+
+
+try
+bpath = 'F:\data\HPS25\HPS25_280621_sess3';
+bz_analyzeSession('basepat',bpath,'analyzeSubSessions',true,'nameExcel','GLUN3','exclude',{'spikes','digitalPulses','thetaModulation','placeCells','spikeTrain','CellExplorer','plotPlaceFields'});
+catch
+   warning('Not possible to run F:\data\HPS25\HPS25_280621_sess3') 
+end
+
+
+try
+bpath = 'F:\data\HPS25\HPS25_050721_sess4';
+bz_analyzeSession('basepat',bpath,'analyzeSubSessions',true,'nameExcel','GLUN3','exclude',{'spikes','digitalPulses','thetaModulation','placeCells','spikeTrain','CellExplorer','plotPlaceFields'});
+catch
+   warning('Not possible to run F:\data\HPS25\HPS25_050721_sess4') 
+end
+
+%% HPS-23
+try
+bpath = 'F:\data\HPS23\HPS23_090621_sess9';
+bz_analyzeSession('basepat',bpath,'analyzeSubSessions',true,'nameExcel','GLUN3','exclude',{'spikes','digitalPulses','thetaModulation','placeCells','spikeTrain','CellExplorer','plotPlaceFields'});
+catch
+   warning('Not possible to run F:\data\HPS23\HPS23_090621_sess9') 
+end
+
+try
+bpath = 'F:\data\HPS23\HPS23_110621_sess10';
+bz_analyzeSession('basepat',bpath,'analyzeSubSessions',true,'nameExcel','GLUN3','exclude',{'spikes','digitalPulses','thetaModulation','placeCells','spikeTrain','CellExplorer','plotPlaceFields'});
+catch
+   warning('F:\data\HPS23\HPS23_110621_sess10') 
+end
+
+try
+bpath = 'F:\data\HPS23\HPS23_160621_sess11';
+bz_analyzeSession('basepat',bpath,'analyzeSubSessions',true,'nameExcel','GLUN3','exclude',{'spikes','digitalPulses','thetaModulation','placeCells','spikeTrain','CellExplorer','plotPlaceFields'});
+catch
+   warning('Not possible to run F:\data\HPS23\HPS23_160621_sess11') 
+end
+
+%% HPS-22 
+try
+bpath = 'F:\data\HPS22\HPS22_100621_sess26';
+% bz_PreprocessSession('basepath',bpath);
+bz_analyzeSession('basepat',bpath,'analyzeSubSessions',true,'nameExcel','GLUN3','exclude',{'spikes','digitalPulses','thetaModulation','placeCells','spikeTrain','CellExplorer','plotPlaceFields'});
+catch
+   warning('Not possible to run F:\data\HPS22\HPS22_100621_sess26') 
+end
+
+try
+bpath = 'F:\data\HPS22\HPS22_150621_sess27';
+% bz_PreprocessSession('basepath',bpath);
+bz_analyzeSession('basepat',bpath,'analyzeSubSessions',true,'nameExcel','GLUN3','exclude',{'spikes','digitalPulses','thetaModulation','placeCells','spikeTrain','CellExplorer','plotPlaceFields'});
+catch
+   warning('Not possible to run F:\data\HPS22\HPS22_150621_sess27') 
+end
+
+try
+bpath = 'F:\data\HPS22\HPS22_160621_sess28';
+% bz_PreprocessSession('basepath',bpath);
+bz_analyzeSession('basepat',bpath,'analyzeSubSessions',true,'nameExcel','GLUN3','exclude',{'spikes','digitalPulses','thetaModulation','placeCells','spikeTrain','CellExplorer','plotPlaceFields'});
+catch
+   warning('Not possible to run F:\data\HPS22\HPS22_160621_sess28') 
+end
+
+
+%%
+bpath = 'F:\data\HPS24\HPS24_230621_sess1';
+bz_PreprocessSession('basepath',bpath);
+
+bpath = 'F:\data\HPS24\HPS24_280621_sess3';
+bz_PreprocessSession('basepath',bpath);
+    
+
+%% HPS-22 Preprocessing
+bpath = 'F:\data\HPS22\HPS22_100621_sess26';
+bz_PreprocessSession('basepath',bpath);
+
+bpath = 'F:\data\HPS22\HPS22_150621_sess27';
+bz_PreprocessSession('basepath',bpath);
+
+bpath = 'F:\data\HPS22\HPS22_160621_sess28';
+bz_PreprocessSession('basepath',bpath);
+
+
+bpath = 'F:\data\HPS25\HPS25_240621_sess2';
+bz_PreprocessSession('basepath',bpath);
 
 
