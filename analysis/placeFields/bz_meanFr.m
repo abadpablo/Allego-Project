@@ -56,5 +56,9 @@ for i=1:length(firingMaps.stats)
 end
 
 if saveMat
-    save([basepath filesep, sessionInfo.FileName '.firingMapsAvg.cellinfo.mat'],'firingMaps')
+    try
+        save([basepath filesep, sessionInfo.FileName '.firingMapsAvg.cellinfo.mat'],'firingMaps')
+    catch
+        save([basepath filesep, sessionInfo.FileName '.firingMapsAvg.cellinfo.mat'],'firingMaps','-v7.3')
+    end        
 end

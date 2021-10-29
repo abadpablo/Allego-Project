@@ -203,6 +203,19 @@ if isempty(dir('*.lfp'))
         ResampleBinary(strcat(basename,'.dat'),strcat(basename,'.lfp'),...
             session.extracellular.nChannels,1, session.extracellular.sr/session.extracellular.srLfp);
     end
+    
+    
+    % Converting LFP data into volts by applying the following formula:
+    % uV = data./ zz * ADC_fullscale_mv / gain;
+    % where zz = 2^16/2 range for positive value of 16 bits
+%     sessionInfo = bz_getSessionInfo(basepath);
+%     zz = 2^sessionInfo.nBits/2;
+%     ADC_fullscale_mv = sessionInfo.VoltageRange;
+%     gain = sessionInfo.Amplification;
+%     factor = zz*ADC_fullscale_mv / gain;
+%     lfp = bz_GetLFP('all');
+%     lfp.data = lfp.data./factor;
+    
 end
 
 %% MEDIAN SUBS

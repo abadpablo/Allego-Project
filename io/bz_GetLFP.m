@@ -81,6 +81,8 @@ addParameter(p,'downsample',1,@isnumeric);
 % addParameter(p,'forceReload',false,@islogical);
 addParameter(p,'noPrompts',false,@islogical);
 addParameter(p,'fromDat',false,@islogical);
+addParameter(p,'conversion',true,@islogical);
+addParameter(p,'notch',true,@islogical);
 
 parse(p,varargin{:})
 basename = p.Results.basename;
@@ -89,6 +91,8 @@ downsamplefactor = p.Results.downsample;
 basepath = p.Results.basepath;
 noPrompts = p.Results.noPrompts;
 fromDat = p.Results.fromDat;
+conversion = p.Results.conversion;
+notch = p.Results.notch;
 
 % doing this so you can use either 'intervals' or 'restrict' as parameters to do the same thing
 intervals = p.Results.intervals;
@@ -208,4 +212,24 @@ for i = 1:nIntervals
         [~,~,regionidx] = intersect(lfp(i).channels,sessionInfo.channels,'stable');
         lfp(i).region = sessionInfo.region(regionidx); % match region order to channel order..
     end
+    
+    % Need to obtain the data in uV by applying the following formula:
+    % uV = data./zz*ADV_fullscale_mv / gain;
+    % where zz = 2^16/2; range for positive value of 16 bits
+    if conversion
+        disp('Converting data into volts...')
+        sessionInfo = bz_getSessionInfo(basepath);
+        zz = 2^sessionInfo.nBits/2;
+        ADC_fullscale_mv = sessionInfo.VoltageRange;
+        gain = sessionInfo.Amplification;
+        factor = zz*ADC_fullscale_mv/gain;
+        lfp(i).data = double(lfp(i).data)/factor;
+    end
+    
+    if notch
+        disp('Applying notch filter')
+        sessionInfo = bz_getSessionInfo(basepath);
+        lfp(i).data = bz_Notched(lfp(i).data,sessionInfo.lfpSampleRate,50,100,150,200);
+    end
+
 end

@@ -103,7 +103,7 @@ end
 % verbose = 0;
 
 nDims = sum(size(map.z)>=2);
-if nDims == 2,
+if nDims == 2
 % 	minSize = 100;
     minSize = 40;
 else
@@ -256,7 +256,7 @@ while true,
 		tc = '*';sc = ' '; % for debugging messages
 	end
 	% Display debugging info
-	if verbose,
+	if strcmpi(verbose,'on')
 		disp([int2zstr(i,2) ') peak  ' num2str(peak) ' @ (' int2str(x) ',' int2str(y) ')']);
 		disp([' ' tc ' field size       ' int2str(size1)]);
 		disp([' ' sc ' subfield size    ' int2str(size2)]);

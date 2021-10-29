@@ -128,7 +128,7 @@ else
         file = dir([basepath filesep '.Coherogram.lfp.mat']);
         load(file.name);
         exist_file = true;
-        %return
+%         return
     end
 end
 
@@ -158,7 +158,6 @@ end
 
 if ~exist_file
 
-
     % Compute and plot coherogram
     parameters.Fs = frequency;
     if ~isempty(range)
@@ -167,6 +166,7 @@ if ~exist_file
     parameters.tapers = tapers;
     parameters.pad = pad;
     [coherogram,phase,~,S1,S2,t,f] = cohgramc(double(lfp1.data),double(lfp2.data),[window window-overlap],parameters);
+%     [coherogram,phase,~,S1,S2,t,f] = cohgramc(double(lfp1.data),double(lfp2.data),[0.1 0.01],parameters);
 
     % t = t'+lfp1(1,1);
     f = f';

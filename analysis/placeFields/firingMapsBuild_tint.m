@@ -125,7 +125,7 @@ map.z = smoothed_rate*tracking.samplingRate(1);
 
 map.countUnSmooth = clust_binned_array;
 map.timeUnSmooth = pos_binned_array;
-map.zUnSmooth = unsmoothed_rate*tracking.samplingRate(1);;
+map.zUnSmooth = unsmoothed_rate*tracking.samplingRate(1);
 
 end
 

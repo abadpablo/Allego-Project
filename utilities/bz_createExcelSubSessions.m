@@ -419,7 +419,7 @@ end
 %% SPIKES
 if any(ismember(listOfAnalysis,'spikes'))
     sheet_spikes = 'spikes';
-    Header_spikes = {'foldername' 'shankID' 'ch' 'totalSpikes' 'amplitude' }
+    Header_spikes = {'foldername' 'shankID' 'ch' 'totalSpikes' 'amplitude' };
     for j=1:spikes.numcells
         Output_spikes{j} = {spikes.basename spikes.shankID(j) spikes.maxWaveformCh(j) spikes.total(j) mean(spikes.amplitudes{j})};
     end
@@ -712,56 +712,187 @@ try
         % Sheet Spikes
         if any(ismember(listOfAnalysis,'spikes'))
             xlswrite([nameExcel], Header_spikes, [sheet_spikes], ['A',num2str(1),':','E',num2str(1)])
+%             xlswrite([nameExcel], Header_spikes, [sheet_spikes], ['F',num2str(1),':','J',num2str(1)])
+%             xlswrite([nameExcel], Header_spikes, [sheet_spikes], ['K',num2str(1),':','O',num2str(1)])
+%             xlswrite([nameExcel], Header_spikes, [sheet_spikes], ['P',num2str(1),':','T',num2str(1)])
+%             xlswrite([nameExcel], Header_spikes, [sheet_spikes], ['U',num2str(1),':','Y',num2str(1)])
+%             xlswrite([nameExcel], Header_spikes, [sheet_spikes], ['Z',num2str(1),':','AD',num2str(1)])
+%             xlswrite([nameExcel], Header_spikes, [sheet_spikes], ['AE',num2str(1),':','AI',num2str(1)])
+%             xlswrite([nameExcel], Header_spikes, [sheet_spikes], ['AJ',num2str(1),':','AN',num2str(1)])
+%             xlswrite([nameExcel], Header_spikes, [sheet_spikes], ['AO',num2str(1),':','AS',num2str(1)])
+%             xlswrite([nameExcel], Header_spikes, [sheet_spikes], ['AT',num2str(1),':','AX',num2str(1)])
         end
         % Sheet Ripples
         if any(ismember(listOfAnalysis,'ripples'))
             xlswrite([nameExcel], Header_ripples, [sheet_ripples],['A',num2str(1),':','H',num2str(1)])
+%             xlswrite([nameExcel], Header_ripples, [sheet_ripples],['I',num2str(1),':','P',num2str(1)])
+%             xlswrite([nameExcel], Header_ripples, [sheet_ripples],['Q',num2str(1),':','X',num2str(1)])
+%             xlswrite([nameExcel], Header_ripples, [sheet_ripples],['Y',num2str(1),':','AF',num2str(1)])
+%             xlswrite([nameExcel], Header_ripples, [sheet_ripples],['AG',num2str(1),':','AN',num2str(1)])
+%             xlswrite([nameExcel], Header_ripples, [sheet_ripples],['AO',num2str(1),':','AV',num2str(1)])
+%             xlswrite([nameExcel], Header_ripples, [sheet_ripples],['AW',num2str(1),':','BD',num2str(1)])
+%             xlswrite([nameExcel], Header_ripples, [sheet_ripples],['BE',num2str(1),':','BL',num2str(1)])
+%             xlswrite([nameExcel], Header_ripples, [sheet_ripples],['BM',num2str(1),':','BT',num2str(1)])
+%             xlswrite([nameExcel], Header_ripples, [sheet_ripples],['BU',num2str(1),':','CB',num2str(1)])
         end
         % Sheet FiringMaps
         if any(ismember(listOfAnalysis,'placeCells'))
             xlswrite([nameExcel], Header_firingMaps, [sheet_firingMaps], ['A',num2str(1),':','AF',num2str(1)])
+%             xlswrite([nameExcel], Header_firingMaps, [sheet_firingMaps], ['AG',num2str(1),':','BL',num2str(1)])
+%             xlswrite([nameExcel], Header_firingMaps, [sheet_firingMaps], ['BM',num2str(1),':','CP',num2str(1)])
+%             xlswrite([nameExcel], Header_firingMaps, [sheet_firingMaps], ['CQ',num2str(1),':','DL',num2str(1)])
+%             xlswrite([nameExcel], Header_firingMaps, [sheet_firingMaps], ['DM',num2str(1),':','EH',num2str(1)])
+%             xlswrite([nameExcel], Header_firingMaps, [sheet_firingMaps], ['EI',num2str(1),':','FE',num2str(1)])
+%             xlswrite([nameExcel], Header_firingMaps, [sheet_firingMaps], ['FF',num2str(1),':','GA',num2str(1)])
+%             xlswrite([nameExcel], Header_firingMaps, [sheet_firingMaps], ['GB',num2str(1),':','HG',num2str(1)])
+%             xlswrite([nameExcel], Header_firingMaps, [sheet_firingMaps], ['HH',num2str(1),':','IM',num2str(1)])
+%             xlswrite([nameExcel], Header_firingMaps, [sheet_firingMaps], ['IN',num2str(1),':','JS',num2str(1)])
         end
         % Sheet spikeTrain
         if any(ismember(listOfAnalysis,'spikeTrain'))
             xlswrite([nameExcel], Header_spikeTrain,[sheet_spikeTrain],['A',num2str(1),':','AF',num2str(1)])
+%             xlswrite([nameExcel], Header_spikeTrain,[sheet_spikeTrain],['AG',num2str(1),':','BL',num2str(1)])
+%             xlswrite([nameExcel], Header_spikeTrain,[sheet_spikeTrain],['BM',num2str(1),':','CP',num2str(1)])
+%             xlswrite([nameExcel], Header_spikeTrain,[sheet_spikeTrain],['CQ',num2str(1),':','DL',num2str(1)])
+%             xlswrite([nameExcel], Header_spikeTrain,[sheet_spikeTrain],['DM',num2str(1),':','EH',num2str(1)])
+%             xlswrite([nameExcel], Header_spikeTrain,[sheet_spikeTrain],['EI',num2str(1),':','FE',num2str(1)])
+%             xlswrite([nameExcel], Header_spikeTrain,[sheet_spikeTrain],['FF',num2str(1),':','GA',num2str(1)])
+%             xlswrite([nameExcel], Header_spikeTrain,[sheet_spikeTrain],['GB',num2str(1),':','HG',num2str(1)])
+%             xlswrite([nameExcel], Header_spikeTrain,[sheet_spikeTrain],['HH',num2str(1),':','IM',num2str(1)])
+%             xlswrite([nameExcel], Header_spikeTrain,[sheet_spikeTrain],['IN',num2str(1),':','JS',num2str(1)])
         end
         % Sheet Performance
         if any(ismember(listOfAnalysis,'performance'))
             xlswrite([nameExcel],Header_performance,[sheet_performance],['A',num2str(1),':','S',num2str(1)])
+%             xlswrite([nameExcel],Header_performance,[sheet_performance],['T',num2str(1),':','AL',num2str(1)])
+%             xlswrite([nameExcel],Header_performance,[sheet_performance],['AM',num2str(1),':','BE',num2str(1)])
+%             xlswrite([nameExcel],Header_performance,[sheet_performance],['BF',num2str(1),':','BX',num2str(1)])
         end
         % Sheet PhaseLockingTheta
         if any(ismember(listOfAnalysis,'thetaModulation'))
             xlswrite([nameExcel], Header_phaseLockingTheta, [sheet_phaseLockingTheta], ['A',num2str(1),':','H',num2str(1)])
+%             xlswrite([nameExcel], Header_phaseLockingTheta, [sheet_phaseLockingTheta], ['I',num2str(1),':','P',num2str(1)])
+%             xlswrite([nameExcel], Header_phaseLockingTheta, [sheet_phaseLockingTheta], ['Q',num2str(1),':','X',num2str(1)])
+%             xlswrite([nameExcel], Header_phaseLockingTheta, [sheet_phaseLockingTheta], ['Y',num2str(1),':','AF',num2str(1)])
+%             xlswrite([nameExcel], Header_phaseLockingTheta, [sheet_phaseLockingTheta], ['AG',num2str(1),':','AN',num2str(1)])
+%             xlswrite([nameExcel], Header_phaseLockingTheta, [sheet_phaseLockingTheta], ['AO',num2str(1),':','AV',num2str(1)])
+%             xlswrite([nameExcel], Header_phaseLockingTheta, [sheet_phaseLockingTheta], ['AW',num2str(1),':','BD',num2str(1)])
+%             xlswrite([nameExcel], Header_phaseLockingTheta, [sheet_phaseLockingTheta], ['BE',num2str(1),':','BL',num2str(1)])
+%             xlswrite([nameExcel], Header_phaseLockingTheta, [sheet_phaseLockingTheta], ['BM',num2str(1),':','BT',num2str(1)])
+%             xlswrite([nameExcel], Header_phaseLockingTheta, [sheet_phaseLockingTheta], ['BU',num2str(1),':','CB',num2str(1)])
             %Sheet PhaseLockingSG
             xlswrite([nameExcel], Header_phaseLockingSG, [sheet_phaseLockingSG], ['A',num2str(1),':','H',num2str(1)])
+%             xlswrite([nameExcel], Header_phaseLockingSG, [sheet_phaseLockingSG], ['I',num2str(1),':','P',num2str(1)])
+%             xlswrite([nameExcel], Header_phaseLockingSG, [sheet_phaseLockingSG], ['Q',num2str(1),':','X',num2str(1)])
+%             xlswrite([nameExcel], Header_phaseLockingSG, [sheet_phaseLockingSG], ['Y',num2str(1),':','AF',num2str(1)])
+%             xlswrite([nameExcel], Header_phaseLockingSG, [sheet_phaseLockingSG], ['AG',num2str(1),':','AN',num2str(1)])
+%             xlswrite([nameExcel], Header_phaseLockingSG, [sheet_phaseLockingSG], ['AO',num2str(1),':','AV',num2str(1)])
+%             xlswrite([nameExcel], Header_phaseLockingSG, [sheet_phaseLockingSG], ['AW',num2str(1),':','BD',num2str(1)])
+%             xlswrite([nameExcel], Header_phaseLockingSG, [sheet_phaseLockingSG], ['BE',num2str(1),':','BL',num2str(1)])
+%             xlswrite([nameExcel], Header_phaseLockingSG, [sheet_phaseLockingSG], ['BM',num2str(1),':','BT',num2str(1)])
+%             xlswrite([nameExcel], Header_phaseLockingSG, [sheet_phaseLockingSG], ['BU',num2str(1),':','CB',num2str(1)])
         end
         % Sheet powerProfile_theta
         if any(ismember(listOfAnalysis,'powerSpectrumProfile'))
             xlswrite([nameExcel], Header_powerProfile_theta, [sheet_powerProfile_theta], ['A',num2str(1),':','G',num2str(1)])
+%             xlswrite([nameExcel], Header_powerProfile_theta, [sheet_powerProfile_theta], ['H',num2str(1),':','N',num2str(1)])
+%             xlswrite([nameExcel], Header_powerProfile_theta, [sheet_powerProfile_theta], ['O',num2str(1),':','U',num2str(1)])
+%             xlswrite([nameExcel], Header_powerProfile_theta, [sheet_powerProfile_theta], ['V',num2str(1),':','AB',num2str(1)])
+%             xlswrite([nameExcel], Header_powerProfile_theta, [sheet_powerProfile_theta], ['AC',num2str(1),':','AI',num2str(1)])
+%             xlswrite([nameExcel], Header_powerProfile_theta, [sheet_powerProfile_theta], ['AJ',num2str(1),':','AP',num2str(1)])
+%             xlswrite([nameExcel], Header_powerProfile_theta, [sheet_powerProfile_theta], ['AQ',num2str(1),':','AW',num2str(1)])
+%             xlswrite([nameExcel], Header_powerProfile_theta, [sheet_powerProfile_theta], ['AX',num2str(1),':','BD',num2str(1)])
+%             xlswrite([nameExcel], Header_powerProfile_theta, [sheet_powerProfile_theta], ['BE',num2str(1),':','BK',num2str(1)])
+%             xlswrite([nameExcel], Header_powerProfile_theta, [sheet_powerProfile_theta], ['BL',num2str(1),':','BR',num2str(1)])
             % Sheet powerProfile_sg
             xlswrite([nameExcel], Header_powerProfile_sg, [sheet_powerProfile_sg], ['A',num2str(1),':','G',num2str(1)])
+%             xlswrite([nameExcel], Header_powerProfile_sg, [sheet_powerProfile_sg], ['H',num2str(1),':','N',num2str(1)])
+%             xlswrite([nameExcel], Header_powerProfile_sg, [sheet_powerProfile_sg], ['O',num2str(1),':','U',num2str(1)]) 
+%             xlswrite([nameExcel], Header_powerProfile_sg, [sheet_powerProfile_sg], ['V',num2str(1),':','AB',num2str(1)])
+%             xlswrite([nameExcel], Header_powerProfile_sg, [sheet_powerProfile_sg], ['AC',num2str(1),':','AI',num2str(1)])
+%             xlswrite([nameExcel], Header_powerProfile_sg, [sheet_powerProfile_sg], ['AJ',num2str(1),':','AP',num2str(1)])
+%             xlswrite([nameExcel], Header_powerProfile_sg, [sheet_powerProfile_sg], ['AQ',num2str(1),':','AW',num2str(1)])
+%             xlswrite([nameExcel], Header_powerProfile_sg, [sheet_powerProfile_sg], ['AX',num2str(1),':','BD',num2str(1)])
+%             xlswrite([nameExcel], Header_powerProfile_sg, [sheet_powerProfile_sg], ['BE',num2str(1),':','BK',num2str(1)])
+%             xlswrite([nameExcel], Header_powerProfile_sg, [sheet_powerProfile_sg], ['BL',num2str(1),':','BR',num2str(1)])
+           
             % Sheet powerProfile_hfo
-            xlswrite([nameExcel], Header_powerProfile_hg, [sheet_powerProfile_hg], ['A',num2str(1),':','G',num2str(1)]) 
+            xlswrite([nameExcel], Header_powerProfile_hg, [sheet_powerProfile_hg], ['A',num2str(1),':','G',num2str(1)])
+%             xlswrite([nameExcel], Header_powerProfile_hg, [sheet_powerProfile_hg], ['H',num2str(1),':','N',num2str(1)])
+%             xlswrite([nameExcel], Header_powerProfile_hg, [sheet_powerProfile_hg], ['O',num2str(1),':','U',num2str(1)])
+%             xlswrite([nameExcel], Header_powerProfile_hg, [sheet_powerProfile_hg], ['V',num2str(1),':','AB',num2str(1)])
+%             xlswrite([nameExcel], Header_powerProfile_hg, [sheet_powerProfile_hg], ['AC',num2str(1),':','AI',num2str(1)])
+%             xlswrite([nameExcel], Header_powerProfile_hg, [sheet_powerProfile_hg], ['AJ',num2str(1),':','AP',num2str(1)])
+%             xlswrite([nameExcel], Header_powerProfile_hg, [sheet_powerProfile_hg], ['AQ',num2str(1),':','AW',num2str(1)])
+%             xlswrite([nameExcel], Header_powerProfile_hg, [sheet_powerProfile_hg], ['AX',num2str(1),':','BD',num2str(1)])
+%             xlswrite([nameExcel], Header_powerProfile_hg, [sheet_powerProfile_hg], ['BE',num2str(1),':','BK',num2str(1)])
+%             xlswrite([nameExcel], Header_powerProfile_hg, [sheet_powerProfile_hg], ['BL',num2str(1),':','BR',num2str(1)])
         end
         % Sheet lfp_analysis
         if any(ismember(listOfAnalysis,'lfp_analysis'))
             if ~isempty(Output_CFC)
                 xlswrite([nameExcel],Header_CFCPhaseAmp,[sheet_CFCPhaseAmp],['A',num2str(1),':','H',num2str(1)])
+%                 xlswrite([nameExcel],Header_CFCPhaseAmp,[sheet_CFCPhaseAmp],['I',num2str(1),':','P',num2str(1)])
+%                 xlswrite([nameExcel],Header_CFCPhaseAmp,[sheet_CFCPhaseAmp],['Q',num2str(1),':','X',num2str(1)])
+%                 xlswrite([nameExcel],Header_CFCPhaseAmp,[sheet_CFCPhaseAmp],['Y',num2str(1),':','AF',num2str(1)])
+%                 xlswrite([nameExcel],Header_CFCPhaseAmp,[sheet_CFCPhaseAmp],['AG',num2str(1),':','AN',num2str(1)])
+%                 xlswrite([nameExcel],Header_CFCPhaseAmp,[sheet_CFCPhaseAmp],['AO',num2str(1),':','AV',num2str(1)])
+%                 xlswrite([nameExcel],Header_CFCPhaseAmp,[sheet_CFCPhaseAmp],['AW',num2str(1),':','BD',num2str(1)])
+%                 xlswrite([nameExcel],Header_CFCPhaseAmp,[sheet_CFCPhaseAmp],['BE',num2str(1),':','BL',num2str(1)])
+%                 xlswrite([nameExcel],Header_CFCPhaseAmp,[sheet_CFCPhaseAmp],['BM',num2str(1),':','BT',num2str(1)])
+%                 xlswrite([nameExcel],Header_CFCPhaseAmp,[sheet_CFCPhaseAmp],['BU',num2str(1),':','CB',num2str(1)])
             end
             if ~isempty(coherence_Shanks)
                 xlswrite([nameExcel],Header_coherenceShanks,[sheet_coherenceShanks],['A',num2str(1),':','AG',num2str(1)])
+%                 xlswrite([nameExcel],Header_coherenceShanks,[sheet_coherenceShanks],['AH',num2str(1),':','BN',num2str(1)])
+%                 xlswrite([nameExcel],Header_coherenceShanks,[sheet_coherenceShanks],['BO',num2str(1),':','CU',num2str(1)])
+%                 xlswrite([nameExcel],Header_coherenceShanks,[sheet_coherenceShanks],['CV',num2str(1),':','EB',num2str(1)])
+%                 xlswrite([nameExcel],Header_coherenceShanks,[sheet_coherenceShanks],['EC',num2str(1),':','FI',num2str(1)])
+%                 xlswrite([nameExcel],Header_coherenceShanks,[sheet_coherenceShanks],['FJ',num2str(1),':','GP',num2str(1)])
+%                 xlswrite([nameExcel],Header_coherenceShanks,[sheet_coherenceShanks],['GQ',num2str(1),':','HW',num2str(1)])
+%                 xlswrite([nameExcel],Header_coherenceShanks,[sheet_coherenceShanks],['HX',num2str(1),':','JD',num2str(1)])
+%                 xlswrite([nameExcel],Header_coherenceShanks,[sheet_coherenceShanks],['JE',num2str(1),':','KK',num2str(1)])
+%                 xlswrite([nameExcel],Header_coherenceShanks,[sheet_coherenceShanks],['KL',num2str(1),':','LR',num2str(1)])
             end
             if ~isempty(Output_coherogram)
                 xlswrite([nameExcel],Header_coherogram,[sheet_coherogram],['A',num2str(1),':','AE',num2str(1)])
+%                 xlswrite([nameExcel],Header_coherogram,[sheet_coherogram],['AF',num2str(1),':','BL',num2str(1)])
+%                 xlswrite([nameExcel],Header_coherogram,[sheet_coherogram],['BM',num2str(1),':','CS',num2str(1)])
+%                 xlswrite([nameExcel],Header_coherogram,[sheet_coherogram],['CT',num2str(1),':','DZ',num2str(1)])
+%                 xlswrite([nameExcel],Header_coherogram,[sheet_coherogram],['EA',num2str(1),':','FG',num2str(1)])
+%                 xlswrite([nameExcel],Header_coherogram,[sheet_coherogram],['FH',num2str(1),':','GN',num2str(1)])
+%                 xlswrite([nameExcel],Header_coherogram,[sheet_coherogram],['GO',num2str(1),':','HU',num2str(1)])
+%                 xlswrite([nameExcel],Header_coherogram,[sheet_coherogram],['HV',num2str(1),':','JB',num2str(1)])
+%                 xlswrite([nameExcel],Header_coherogram,[sheet_coherogram],['JC',num2str(1),':','KI',num2str(1)])
+%                 xlswrite([nameExcel],Header_coherogram,[sheet_coherogram],['KJ',num2str(1),':','LP',num2str(1)])
             end
     %         if ~isempty(Output_phaseAmpCoupling)
     %             xlswrite([nameExcel],Header_phaseAmpCouplingByAmp,[sheet_phaseAmpCouplingByAmp],['A',num2str(1),':','C',num2str(1)])
     %         end
             if ~isempty(Output_GMI)
                 xlswrite([nameExcel],Header_GMI,[sheet_GMI],['A',num2str(1),':','G',num2str(1)])
+%                 xlswrite([nameExcel],Header_GMI,[sheet_GMI],['H',num2str(1),':','N',num2str(1)])
+%                 xlswrite([nameExcel],Header_GMI,[sheet_GMI],['O',num2str(1),':','U',num2str(1)])
+%                 xlswrite([nameExcel],Header_GMI,[sheet_GMI],['V',num2str(1),':','AB',num2str(1)])
+%                 xlswrite([nameExcel],Header_GMI,[sheet_GMI],['AC',num2str(1),':','AI',num2str(1)])
+%                 xlswrite([nameExcel],Header_GMI,[sheet_GMI],['AJ',num2str(1),':','AP',num2str(1)])
+%                 xlswrite([nameExcel],Header_GMI,[sheet_GMI],['AQ',num2str(1),':','AW',num2str(1)])
+%                 xlswrite([nameExcel],Header_GMI,[sheet_GMI],['AX',num2str(1),':','BD',num2str(1)])
+%                 xlswrite([nameExcel],Header_GMI,[sheet_GMI],['BE',num2str(1),':','BK',num2str(1)])
+%                 xlswrite([nameExcel],Header_GMI,[sheet_GMI],['BL',num2str(1),':','BR',num2str(1)])
+                
             end
             if ~isempty(Output_MI)
                 xlswrite([nameExcel],Header_MI,[sheet_MI],['A',num2str(1),':','F',num2str(1)])
+%                 xlswrite([nameExcel],Header_MI,[sheet_MI],['G',num2str(1),':','L',num2str(1)])
+%                 xlswrite([nameExcel],Header_MI,[sheet_MI],['M',num2str(1),':','R',num2str(1)])
+%                 xlswrite([nameExcel],Header_MI,[sheet_MI],['S',num2str(1),':','X',num2str(1)])
+%                 xlswrite([nameExcel],Header_MI,[sheet_MI],['Y',num2str(1),':','AD',num2str(1)])
+%                 xlswrite([nameExcel],Header_MI,[sheet_MI],['AE',num2str(1),':','AJ',num2str(1)])
+%                 xlswrite([nameExcel],Header_MI,[sheet_MI],['AK',num2str(1),':','AP',num2str(1)])
+%                 xlswrite([nameExcel],Header_MI,[sheet_MI],['AQ',num2str(1),':','AV',num2str(1)])
+%                 xlswrite([nameExcel],Header_MI,[sheet_MI],['AW',num2str(1),':','BB',num2str(1)])
+%                 xlswrite([nameExcel],Header_MI,[sheet_MI],['BC',num2str(1),':','BH',num2str(1)])
             end
         end
     end
@@ -783,6 +914,7 @@ try
 
     % RIPPLE
     if any(ismember(listOfAnalysis,'ripples'))
+        
         for i=1:length(Output_ripples)
             file_excel = openExcel(nameExcel,sheet_ripples);
             length_fileExcel = numel(fieldnames((file_excel))); % length == 1 means that there is only Header in xls file

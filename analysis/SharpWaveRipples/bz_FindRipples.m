@@ -102,9 +102,9 @@ if isstr(varargin{1})  % if first arg is basepath
     timestamps_subSession = p.Results.timestamps_subSession;
     foldername = p.Results.foldername;   
     if ~isempty(p.Results.timestamps_subSession)
-        lfp = bz_GetLFP(p.Results.channel,'restrict',p.Results.timestamps_subSession,'basepath',p.Results.basepath,'basename',basename);%currently cannot take path inputs
+        lfp = bz_GetLFP(p.Results.channel,'restrict',p.Results.timestamps_subSession,'basepath',p.Results.basepath,'basename',basename,'conversion',false);%currently cannot take path inputs
     else
-        lfp = bz_GetLFP(p.Results.channel,'basepath',p.Results.basepath,'basename',basename);
+        lfp = bz_GetLFP(p.Results.channel,'basepath',p.Results.basepath,'basename',basename,'conversion',false);
     end
     signal = bz_Filter(double(lfp.data),'filter','butter','passband',passband,'order', 3);
     timestamps = lfp.timestamps;
@@ -244,7 +244,7 @@ if ~isempty(start)
     bad = [];
     if ~isempty(noise)
         if length(noise) == 1 % you gave a channel number
-           noiselfp = bz_GetLFP(p.Results.noise,'basepath',p.Results.basepath,'basename',basename);%currently cannot take path inputs
+           noiselfp = bz_GetLFP(p.Results.noise,'basepath',p.Results.basepath,'basename',basename,'conversion',false);%currently cannot take path inputs
            squaredNoise = bz_Filter(double(noiselfp.data),'filter','butter','passband',passband,'order', 3).^2;
         else
 
@@ -372,50 +372,101 @@ end
 %% BUZCODE Struct Output
 rips = ripples; clear ripples
 
-ripples.timestamps = rips(:,[1 3]);
-ripples.peaks = rips(:,2);            %peaktimes? could also do these as timestamps and then ripples.ints for start/stops?
-ripples.peakNormedPower = rips(:,4);  %amplitudes?
-ripples.stdev = sd;
-if ~isempty(bad)
-    ripples.noise.times = bad(:,[1 3]);
-    ripples.noise.peaks = bad(:,[2]);
-    ripples.noise.peakNormedPower = bad(:,[4]);
-else
-    ripples.noise.times = [];
-    ripples.noise.peaks = [];
-    ripples.noise.peakNormedPower = [];
-end
-
-%The detectorinto substructure
-detectorinfo.detectorname = 'bz_FindRipples';
-detectorinfo.detectiondate = today;
-detectorinfo.detectionintervals = restrict;
-detectorinfo.detectionparms = p.Results;
-detectorinfo.detectionparms = rmfield(detectorinfo.detectionparms,'noise');
-if isfield(detectorinfo.detectionparms,'timestamps')  
-    detectorinfo.detectionparms = rmfield(detectorinfo.detectionparms,'timestamps');
-end
-if isfield(p.Results,'channel')
-    detectorinfo.detectionchannel = p.Results.channel;
-end
-if ~isempty(noise)
-    detectorinfo.noisechannel = noise;
-else
-    detectorinfo.noisechannel = nan;
-end
-
-
-%Put it into the ripples structure
-ripples.detectorinfo = detectorinfo;
-
-%Save
-if p.Results.saveMat
-    disp('Saving Ripple results...')
-    if ~isempty(foldername)
-        filename = split(pwd,filesep); filename = filename{end};
-        save(fullfile(basepath, [strcat(basename,'.',foldername), '.ripples.SubSession.events.mat']),'ripples')
+if ~isempty(rips)
+    ripples.timestamps = rips(:,[1 3]);
+    ripples.peaks = rips(:,2);            %peaktimes? could also do these as timestamps and then ripples.ints for start/stops?
+    ripples.peakNormedPower = rips(:,4);  %amplitudes?
+    ripples.stdev = sd;
+    if ~isempty(bad)
+        ripples.noise.times = bad(:,[1 3]);
+        ripples.noise.peaks = bad(:,[2]);
+        ripples.noise.peakNormedPower = bad(:,[4]);
     else
-        save(fullfile(basepath, [basename, '.ripples.events.mat']),'ripples')
+        ripples.noise.times = [];
+        ripples.noise.peaks = [];
+        ripples.noise.peakNormedPower = [];
+    end
+
+    %The detectorinto substructure
+    detectorinfo.detectorname = 'bz_FindRipples';
+    detectorinfo.detectiondate = today;
+    detectorinfo.detectionintervals = restrict;
+    detectorinfo.detectionparms = p.Results;
+    detectorinfo.detectionparms = rmfield(detectorinfo.detectionparms,'noise');
+    if isfield(detectorinfo.detectionparms,'timestamps')  
+        detectorinfo.detectionparms = rmfield(detectorinfo.detectionparms,'timestamps');
+    end
+    if isfield(p.Results,'channel')
+        detectorinfo.detectionchannel = p.Results.channel;
+    end
+    if ~isempty(noise)
+        detectorinfo.noisechannel = noise;
+    else
+        detectorinfo.noisechannel = nan;
+    end
+
+
+    %Put it into the ripples structure
+    ripples.detectorinfo = detectorinfo;
+
+    %Save
+    if p.Results.saveMat
+        disp('Saving Ripple results...')
+        if ~isempty(foldername)
+            filename = split(pwd,filesep); filename = filename{end};
+            save(fullfile(basepath, [strcat(basename,'.',foldername), '.ripples.SubSession.events.mat']),'ripples')
+        else
+            save(fullfile(basepath, [basename, '.ripples.events.mat']),'ripples')
+        end
+    end
+else
+    ripples.timestamps = [];
+    ripples.peaks = [];            %peaktimes? could also do these as timestamps and then ripples.ints for start/stops?
+    ripples.peakNormedPower = [];  %amplitudes?
+    ripples.stdev = [];
+    if exist('bad','var')
+        if ~isempty(bad)
+            ripples.noise.times = bad(:,[1 3]);
+            ripples.noise.peaks = bad(:,[2]);
+            ripples.noise.peakNormedPower = bad(:,[4]);
+        else
+            ripples.noise.times = [];
+            ripples.noise.peaks = [];
+            ripples.noise.peakNormedPower = [];
+        end
+    end
+
+    %The detectorinto substructure
+    detectorinfo.detectorname = 'bz_FindRipples';
+    detectorinfo.detectiondate = today;
+    detectorinfo.detectionintervals = restrict;
+    detectorinfo.detectionparms = p.Results;
+    detectorinfo.detectionparms = rmfield(detectorinfo.detectionparms,'noise');
+    if isfield(detectorinfo.detectionparms,'timestamps')  
+        detectorinfo.detectionparms = rmfield(detectorinfo.detectionparms,'timestamps');
+    end
+    if isfield(p.Results,'channel')
+        detectorinfo.detectionchannel = p.Results.channel;
+    end
+    if ~isempty(noise)
+        detectorinfo.noisechannel = noise;
+    else
+        detectorinfo.noisechannel = nan;
+    end
+
+
+    %Put it into the ripples structure
+    ripples.detectorinfo = detectorinfo;
+
+    %Save
+    if p.Results.saveMat
+        disp('Saving Ripple results...')
+        if ~isempty(foldername)
+            filename = split(pwd,filesep); filename = filename{end};
+            save(fullfile(basepath, [strcat(basename,'.',foldername), '.ripples.SubSession.events.mat']),'ripples')
+        else
+            save(fullfile(basepath, [basename, '.ripples.events.mat']),'ripples')
+        end
     end
 end
 

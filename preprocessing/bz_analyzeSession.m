@@ -31,7 +31,7 @@ p = inputParser;
 addParameter(p,'basepath',pwd,@isdir);
 addParameter(p,'listOfAnalysis','all',@iscellstr);
 addParameter(p,'exclude',[],@iscellstr);
-addParameter(p,'excludeShanks',[],@isnmueric);
+addParameter(p,'excludeShanks',[],@isnumeric);
 addParameter(p,'getWaveformsFromDat',true,@islogical);
 addParameter(p,'analogChannelsList','all',@isnumeric);
 addParameter(p,'digitalChannelsList','all',@isnumeric);
@@ -47,7 +47,8 @@ addParameter(p,'hfoFreq',[150 185], @isnumeric);
 addParameter(p,'showFig',true,@isnumeric);
 addParameter(p,'pathExcel','F:\data',@isstr);
 addParameter(p,'nameExcel',[],@isstr);
-addParameter(p,'selectedRippleChannel',[],@isnumeric),
+addParameter(p,'selectedRippleChannel',[],@isnumeric);
+addParameter(p,'selectedSWChannel',[],@isnumeric);
 
 
 parse(p,varargin{:});
@@ -70,6 +71,7 @@ showFig = p.Results.showFig;
 pathExcel = p.Results.pathExcel;
 nameExcel = p.Results.nameExcel;
 selectedRippleChannel = p.Results.selectedRippleChannel;
+selectedSWChannel = p.Results.selectedSWChannel;
 
 prevPath = pwd;
 cd(basepath);
@@ -283,7 +285,7 @@ if any(ismember(listOfAnalysis,'ripples'))
         if analyzeSubSessions  
             try
                 if ~isempty(selectedRippleChannel)
-                    rippleChannel = computeRippleChannel('discardShanks',excludeShanks,'saveMat',true,'selectedRippleChannel',selectedRippleChannel);
+                    rippleChannel = computeRippleChannel('discardShanks',excludeShanks,'saveMat',true,'selectedRippleChannel',selectedRippleChannel,'selectedSWChannel',selectedSWChannel);
                 else
                     rippleChannel = computeRippleChannel('discardShanks',excludeShanks,'saveMat',true);
                 end
@@ -503,8 +505,15 @@ if any(ismember(listOfAnalysis,'powerSpectrumProfile'))
                     % get channels of interest % max theta power above pyr layer
                     [~, a] = max(powerProfile_theta{i}.mean);
                     region{i}.CA1sp = powerProfile_theta{i}.channels(a);
+                    if ~isempty('*.channelInfo.ripples.mat')
+                        file = dir('*.channelInfo.ripples.mat');
+                        load(file.name)
+                    end
+                    
                     for ii = 1:size(sessionInfo.AnatGrps,2)
-                        if ismember(region{i}.CA1sp, sessionInfo.AnatGrps(ii).Channels)
+%                         if ismember(region{i}.CA1sp, sessionInfo.AnatGrps(ii).Channels)
+                        if ismember(rippleChannels.Ripple_Channel, sessionInfo.AnatGrps(ii).Channels)
+                            
                             p_th{i} = powerProfile_theta{i}.mean(sessionInfo.AnatGrps(ii).Channels + 1);                
                             p_sg{i} = powerProfile_sg{i}.mean(sessionInfo.AnatGrps(ii).Channels + 1);
                             p_hg{i} = powerProfile_hg{i}.mean(sessionInfo.AnatGrps(ii).Channels + 1);
@@ -523,16 +532,17 @@ if any(ismember(listOfAnalysis,'powerSpectrumProfile'))
                             set(gca,'XTick',1:length(channels),'XTickLabel',channels,'XTickLabelRotation',45);
                             ax = axis;
                             xlabel(strcat('Channels (neuroscope)-Shank',num2str(ii))); ylabel('power (z)');
-                            plot(find(channels == region{i}.CA1sp)*ones(2,1),ax([3 4]),'-k');
-                            plot(find(channels == region{i}.CA1so)*ones(2,1),ax([3 4]),'--k');
-                            plot(find(channels == region{i}.CA1slm)*ones(2,1),ax([3 4]),'-.k');
+%                             plot(find(channels == region{i}.CA1sp)*ones(2,1),ax([3 4]),'-k');
+%                             plot(find(channels == region{i}.CA1so)*ones(2,1),ax([3 4]),'--k');
+%                             plot(find(channels == region{i}.CA1slm)*ones(2,1),ax([3 4]),'-.k');
+                            plot(find(channels == rippleChannels.Ripple_Channel)*ones(2,1),ax([3 4]),'-k');
                             legend('4-12Hz', 'hfo', '30-60','pyr','~or','~slm');
-
                             saveas(gcf,['SummaryFigures\regionDef_',foldername,'.png']);
                         end
                     end
                     % power profile of pyr channel of all session
-                    lfpT = bz_GetLFP(region{i}.CA1sp,'restrict',timestamps,'noPrompts',true);
+%                     lfpT = bz_GetLFP(region{i}.CA1sp,'restrict',timestamps,'noPrompts',true);
+                    lfpT = bz_GetLFP(rippleChannels.Ripple_Channel,'restrict',timestamps,'noPrompts',true);
                     params.Fs = lfpT.samplingRate; params.fpass = [2 200]; params.tapers = [3 5]; params.pad = 1;
                     [S,t,f] = mtspecgramc(single(lfpT.data),[2 1], params);
                     S = log10(S); % in Db
@@ -1108,7 +1118,7 @@ if any(ismember(listOfAnalysis,'behaviour'))
         if any(ismember(listOfAnalysis,'placeCells'))
             try
                 spikes = loadSpikes('getWaveformsFromDat',getWaveformsFromDat,'forceReload',false,'showWaveforms',showWaveforms);
-                firingMaps = bz_firingMapAvg(behaviour,spikes,'saveMat',true,'speedFilter',true,'periodicAnalysis',false,'spikeShuffling',false);     
+                firingMaps = bz_firingMapAvg(behaviour,spikes,'saveMat',true,'speedFilter',true,'periodicAnalysis',false,'spikeShuffling',true,'numRand',1000);     
             catch
                 warning('It has not been possible to run Place Cells Analysis...')
             end
@@ -1195,7 +1205,9 @@ if any(ismember(listOfAnalysis,'lfp_analysis'))
                   % Compute Coherence between one channel of each shank
                   %coherencePerShank.(foldername) = bz_coherencePerShank('timestampsSubSession',timestamps,'foldername',foldername,'saveMat',false);
                   % Compute Coherence between two channels
-                  coherogram.(foldername) = bz_MTCoherogram(lfp1,lfp2,'foldername',foldername,'range',[0 200], 'window',1,'saveMat',false);
+%                   coherogram.(foldername) = bz_MTCoherogram(lfp1,lfp2,'foldername',foldername,'range',[0 200], 'window',1,'saveMat',false);
+                  coherogram.(foldername) = bz_MTCoherogram_v2(lfp1,lfp2,'foldername',foldername,'range',[0 200], 'window',1,'saveMat',false);
+                  
                   % Compute Cross-Frequency Coupling
                   lfp = bz_GetLFP('all','restrict',timestamps);
 %                   CFCPhaseAmp_lg.(foldername) = bz_CFCPhaseAmp(lfp,[thetaFreq(1):1:thetaFreq(2)],[sgFreq(1):1:sgFreq(2)],'phaseCh',rippleChannels{ii}.Ripple_Channel,'ampCh',rippleChannels{ii}.Ripple_Channel,'foldername',foldername,'saveMat',false);
@@ -1264,7 +1276,7 @@ if any(ismember(listOfAnalysis,'lfp_analysis'))
                 save([basepath filesep sessionInfo.FileName,'.Coherence_Shanks.SubSession.lfp.mat'],'coherencePerShank');
               end
               % Coherogram
-              save([basepath filesep sessionInfo.FileName,'.Coherogram.SubSession.lfp.mat'],'coherogram');
+              save([basepath filesep sessionInfo.FileName,'.Coherogram.SubSession.lfp.mat'],'coherogram','-v7.3');
               % CFCPhaseAmp lg
               save([basepath filesep sessionInfo.FileName,'.CFCPhaseAmp_',num2str(sgFreq(1)),'_',num2str(sgFreq(2)),'.SubSession.lfp.mat'],'CFCPhaseAmp_lg');
               % CFCPhaseAmp hg
@@ -1399,17 +1411,17 @@ if any(ismember(listOfAnalysis,'plotPlaceFields'))
     try
         disp('Plotting Place Fields')
         sessionInfo = bz_getSessionInfo(basepath);
-        meanFr = bz_meanFr(spikes);
-        behaviour = getSessionBehaviour_v2();
-        firingMaps = bz_firingMapAvg(behaviour,spikes,'saveMat',true,'speedFilter',true,'periodicAnalysis',false,'spikeShuffling',false);       
         spikes = loadSpikes('getWaveformsFromDat',getWaveformsFromDat,'forceReload',false,'showWaveforms',showWaveforms);
         tracking = getSessionTracking();
+        behaviour = getSessionBehaviour_v2();
+        spikeTrain = bz_SpikeTrain(spikes,'analyzeSubSessions',analyzeSubSessions,'showFigure',true);
+        meanFr = bz_meanFr(spikes);
+        firingMaps = bz_firingMapAvg(behaviour,spikes,'saveMat',true,'speedFilter',true,'periodicAnalysis',false,'spikeShuffling',false); 
         if ~isempty([basepath filesep sessionInfo.FileName, '.cell_metrics.cellinfo.mat'])
             disp('Loading Cell Metrics...')
             file = dir([basepath filesep sessionInfo.FileName,'.cell_metrics.cellinfo.mat'])
             load(file.name)
         end
-        spikeTrain = bz_SpikeTrain(spikes,'analyzeSubSessions',analyzeSubSessions,'showFigure',true);
         plot_placeFields('firingMaps',firingMaps,'spikes',spikes,'tracking',tracking,'cell_metrics',cell_metrics,'spikeTrain',spikeTrain);
     catch
         disp('It is not possible to run plot Place Fields')

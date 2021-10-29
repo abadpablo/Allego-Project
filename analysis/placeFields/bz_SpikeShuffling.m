@@ -1,4 +1,4 @@
- function [shuffling]=bz_SpikeShuffling(positions,spikes,varargin)
+ function [shuffling,shuffling_maps]=bz_SpikeShuffling(positions,spikes,varargin)
  
 % Computes randomization of the map
 % Adapted from SpikeShuffling_spk2 by Pablo Abad 23/07 to resemble buzCode
@@ -75,7 +75,7 @@ ValRand(1) = 20;
 map = Map(positions,spikes,'smooth',smooth,'minTime',minTime,...
             'nBins',nBins,'maxGap',maxGap,'mode',mode,'maxDistance',maxDistance);
         
-stats_original = MapStats(map,spikes,'verbose','on');
+stats_original = MapStats(map,spikes,'verbose','off');
 %%
 
 spikes_aux = spikes(spikes > t(1) & spikes < t(end));
@@ -97,7 +97,7 @@ for i=1:numRand
     shuffling{i} = Map(positions,spikes_rand3,'smooth',smooth,'minTime',minTime,...
                         'nBins',nBins,'maxGap',maxGap,'mode',mode,'maxDistance',maxDistance);
                     
-    stats{i} = MapStats(shuffling{i},spikes_rand3,'verbose','on');
+    stats{i} = MapStats(shuffling{i},spikes_rand3,'verbose','off');
     
     % Spatial Stability
     [r p] = corrcoef(map.z,shuffling{i}.z);
@@ -117,8 +117,8 @@ end
 shuff = shuffling;
 clear shuffling;
 
-shuffling.maps = shuff;
-shuffling.stats = stats;
+shuffling_maps.maps = shuff;
+shuffling_maps.stats = stats;
 
 
 %% Statistics

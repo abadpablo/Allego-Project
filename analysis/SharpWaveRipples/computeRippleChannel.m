@@ -28,6 +28,7 @@ addParameter(p,'force',false,@islogical);
 addParameter(p,'timestamps_subSession',[],@isnumeric);
 addParameter(p,'foldername',[],@isstr);
 addParameter(p,'selectedRippleChannel',[],@isnumeric);
+addParameter(p,'selectedSWChannel',[],@isnumeric);
 
 
 parse(p,varargin{:});
@@ -40,6 +41,7 @@ force = p.Results.force;
 timestamps_subSession = p.Results.timestamps_subSession;
 foldername = p.Results.foldername;
 selectedRippleChannel = p.Results.selectedRippleChannel;
+selectedSWChannel = p.Results.selectedSWChannel;
 
 prevPath = pwd;
 cd(basePath);
@@ -150,9 +152,9 @@ end
 Ripple_window_start=120;
 Ripple_window_end=180;
 if ~isempty(timestamps_subSession)
-    [lfp] = bz_GetLFP('all','restrict',timestamps_subSession);
+    [lfp] = bz_GetLFP('all','restrict',timestamps_subSession,'conversion',false);
 else
-    [lfp] = bz_GetLFP('all');
+    [lfp] = bz_GetLFP('all','conversion',false);
 end
 
 disp('LFP file loaded');
@@ -220,7 +222,7 @@ Win=70;
 LfpSamplingrate = lfp.samplingRate;
 % Removing short startting and the end ripples
 if ~isempty(timestamps_subSession)
-    lfp_aux = bz_GetLFP('all');
+    lfp_aux = bz_GetLFP('all','conversion',false);
     ripples.peaks = ripples.peaks(ripples.peaks*LfpSamplingrate>Win+1 & ripples.peaks*LfpSamplingrate<length(lfp_aux.timestamps)-Win+1);
 else
     ripples.peaks = ripples.peaks(ripples.peaks*LfpSamplingrate>Win+1 & ripples.peaks*LfpSamplingrate<length(lfp.timestamps)-Win+1);
@@ -507,7 +509,11 @@ if ~isempty(Ripples_CSD)
     
     if ~isempty(selectedRippleChannel)
         rippleChannels.Ripple_Channel = selectedRippleChannel;
-        rippleChannels.Sharpwave_Channel=SWR_chnl - 1;
+        if ~isempty(selectedSWChannel)
+            rippleChannels.Sharpwave_Channel = selectedSWChannel;
+        else
+            rippleChannels.Sharpwave_Channel=SWR_chnl - 1;
+        end
         rippleChannels.Noise_Channel=noise_chnl - 1;
         rippleChannels.Deep_Sup=Deep_Sup;
         rippleChannels.foldername = foldername;
@@ -531,11 +537,36 @@ if ~isempty(Ripples_CSD)
         end
     end
 else
-    rippleChannels.Ripple_Channel = [];
-    rippleChannels.Sharpwave_Channel = [];
-    rippleChannels.Noise_Channel = [];
-    rippleChannels_Deep_Sup = [];
-    rippleChannels.foldername = foldername;
+    if ~isempty(selectedRippleChannel) 
+        rippleChannels.Ripple_Channel = selectedRippleChannel;
+        if ~isempty(selectedSWChannel)
+            rippleChannels.Sharpwave_Channel=selectedSWChannel;
+        else
+            rippleChannels.Sharpwave_Channel=[];
+        end
+        rippleChannels.Noise_Channel=[];
+        rippleChannels.Deep_Sup=[];
+        rippleChannels.foldername = foldername;
+        
+    else
+        
+        rippleChannels.Ripple_Channel = [];
+        rippleChannels.Sharpwave_Channel = [];
+        rippleChannels.Noise_Channel = [];
+        rippleChannels_Deep_Sup = [];
+        rippleChannels.foldername = foldername;
+    end
+    
+    if saveMat
+        disp('Saving results...');
+        if ~isempty(foldername)
+            filename = split(pwd,filesep); filename = filename{end};
+            save([strcat(filename,'.',foldername),'.channelinfo.SubSession.ripples.mat'],'rippleChannels');
+        else
+            filename = split(pwd,filesep); filename = filename{end};
+            save([filename '.channelinfo.ripples.mat'],'rippleChannels');
+        end
+    end
 end
     
 

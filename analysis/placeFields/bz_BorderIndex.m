@@ -46,7 +46,7 @@ else
     Map = map.zUnSmooth;
 end
 
-disp('Nan changed by 0')
+% disp('Nan changed by 0')
 
 indnan=(find(isnan(Map)));
 Map(indnan)=0;

@@ -183,7 +183,7 @@ if  ~isempty(firingField)
     Ffvspatch=NumFF/patchs;
     if patchsArea>0
         FFArevspatchAr=(FFArea/NumFF)/(patchsArea/patchs);
-        TotSizeRat=(FFAreatot/patchsAreatot)/FFAreatot
+        TotSizeRat=(FFAreatot/patchsAreatot)/FFAreatot;
     else
         FFArevspatchAr=(FFArea/NumFF)/1;
         TotSizeRat=(FFAreatot/1)/FFAreatot;

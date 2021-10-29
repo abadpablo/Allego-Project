@@ -52,7 +52,7 @@ p=inputParser;
 addParameter(p,'basepath',pwd,@isstr);
 addParameter(p,'smooth_buz',2,@isnumeric);
 addParameter(p,'smooth_tint',7,@isnumeric);
-addParameter(p,'speedThresh',0.1,@isnumeric);
+addParameter(p,'speedThresh',0.05,@isnumeric);
 addParameter(p,'nBins',50,@isnumeric);
 addParameter(p,'maxGap',0.1,@isnumeric);
 addParameter(p,'minTime',0,@isnumeric);
@@ -64,7 +64,7 @@ addParameter(p,'orderKalmanVel',2,@isnumeric);
 addParameter(p,'speedFilter',false,@islogical);
 addParameter(p,'cmBin',2.5,@isnumeric);
 addParameter(p,'periodicAnalysis',false,@islogical);
-addParameter(p,'numRand',10,@isnumeric);
+addParameter(p,'numRand',1000,@isnumeric);
 addParameter(p,'spikeShuffling',true,@islogical);
 addParameter(p,'buzAnalysis',false,@islogical);
 addParameter(p,'tintAnalysis',true,@islogical);
@@ -118,6 +118,7 @@ if isfield(tracking,'apparatus')
 end
 
 if numApparatus == 1
+    clear nBins
     nBins{1} = round(xLim/cmBin);
 else
     clear nBins
@@ -212,19 +213,27 @@ for unit = 1:length(spikes.times)
                     'nBins',nBins{c},'maxGap',maxGap,'mode',mode,'maxDistance',maxDistance);                
             end
             
-            stats{unit}{c} = MapStats(map{unit}{c},spikes.times{unit},'nBins',nBins{c},'verbose','on');
+            stats{unit}{c} = MapStats(map{unit}{c},spikes.times{unit},'nBins',nBins{c},'verbose','off');
             
             % shuffling of spikes times
             if spikeShuffling
-                shuffling{unit}{c} = bz_SpikeShuffling(positions{c},spikes.times{unit},'smooth',smooth,'minTime',minTime,...
-                    'nBins',nBins{c},'maxGap',maxGap,'mode',mode,'maxDistance',maxDistance,'numRand',numRand);
+                if buzAnalysis
+                    disp(['Shuffling unit:', num2str(unit)])
+                    shuffling{unit}{c} = bz_SpikeShuffling(positions{c},spikes.times{unit},'smooth',smooth_buz,'minTime',minTime,...
+                        'nBins',nBins{c},'maxGap',maxGap,'mode',mode,'maxDistance',maxDistance,'numRand',numRand);
+                elseif tintAnalysis
+                    disp(['Shuffling unit:', num2str(unit), ' out of ', num2str(length(spikes.times))])
+                    [shuffling{unit}{c},shuffling_maps{unit}{c}] = bz_SpikeShuffling(positions{c},spikes.times{unit},'smooth',smooth_tint,'minTime',minTime,...
+                        'nBins',nBins{c},'maxGap',maxGap,'mode',mode,'maxDistance',maxDistance,'numRand',numRand);
+                end
+                    
             else
                 shuffling = [];
             end
             
             % Periodic Firing
             if periodicAnalysis
-                periodic{unit}{c} = bz_PeriodicPower(map{unit}{c},shuffling{unit}{c},'random',true,'nBins',nBins{c});
+                periodic{unit}{c} = bz_PeriodicPower(map{unit}{c},shuffling_maps{unit}{c},'random',true,'nBins',nBins{c});
             else
                 periodic{unit}{c} = [];
             end        
@@ -278,6 +287,9 @@ firingMaps.stats = stats;
 
 % Save shuffling
 firingMaps.shuffling = shuffling;
+firingMaps.shuffling = shuffling;
+firingMaps_shuffling = shuffling_maps;
+
 
 % Save periodic
 if periodicAnalysis
@@ -295,7 +307,17 @@ end
 
 
 if saveMat
-   save([firingMaps.sessionName '.firingMapsAvg.cellinfo.mat'],'firingMaps'); 
+    try
+        save([firingMaps.sessionName '.firingMapsAvg.cellinfo.mat'],'firingMaps'); 
+    catch
+        save([firingMaps.sessionName '.firingMapsAvg.cellinfo.mat'],'firingMaps','-v7.3'); 
+    end
+    
+    try
+        save([firingMaps.sessionName '.firingMapsAvg_shuffling.cellinfo.mat'],'firingMaps_shuffling');
+    catch
+        save([firingMaps.sessionName '.firingMapsAvg_shuffling.cellinfo.mat'],'firingMaps_shuffling','-v7.3');
+    end
 end
 
 

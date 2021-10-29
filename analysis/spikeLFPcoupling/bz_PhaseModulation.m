@@ -61,6 +61,8 @@ addParameter(p,'numBins',180,@isnumeric)
 addParameter(p,'powerThresh',2,@isnumeric)
 addParameter(p,'saveMat',false,@islogical)
 addParameter(p,'force',false,@islogical);
+addParameter(p,'unit',[],@isnumeric);
+
 
 parse(p,varargin{:})
 
@@ -76,11 +78,18 @@ numBins = p.Results.numBins;
 powerThresh = p.Results.powerThresh;
 saveMat = p.Results.saveMat;
 force = p.Results.force;
+unit = p.Results.unit;
 
 filename = dir('*PhaseLockingData.cellinfo.mat*'); 
 if ~isempty(filename) && ~force
     disp(['Phase Locking Data already detected ! Loading file: ', filename.name]);
     load(filename.name)
+end
+
+if ~isempty(unit)
+    spikeTimes{1} = spikes.times{unit};
+    spikes = rmfield(spikes,'times');
+    spikes.times = spikeTimes;
 end
 
 %% Get phase for every time point in LFP

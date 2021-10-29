@@ -46,6 +46,7 @@ saveFig = p.Results.saveFig;
 random = p.Results.random;
 
 mapa = map.zUnSmooth;
+mapa (isnan(mapa)) = 0;
 mapa_sm = mapa-mean(mapa(:));
 B = padarray(mapa_sm,[round((256-nBins)/2) round((256-nBins)/2)]); 
 TF = fftshift(fft2(B));  
@@ -69,7 +70,7 @@ gradStep=1;
 
 TF2= TFP.*(TFP>thre);%>thre) ; CHECK this 121016
 figure, imagesc(TF2);  
-cleanmat=0;
+cleanmat=1;
 
 while cleanmat==0
     disp('Eliminate local peaks ')
